@@ -1,99 +1,90 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>g3nui — Human-in-the-Loop Engine</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            g3n: {
-              bg:  '#0a0b0e',
-              bg2: '#101218',
-              sf:  '#16181f',
-              sf2: '#1c1f28',
-              bd:  '#262a36',
-              bd2: '#333848',
-              tx:  '#eaecf2',
-              tx2: '#a0a5b8',
-              tx3: '#5d6278',
-              ac:  '#818cf8',
-              ac2: '#6366f1',
-              gn:  '#34d399',
-              am:  '#fbbf24',
-              rd:  '#fb7185',
-              cy:  '#22d3ee',
-            }
-          },
-          fontFamily: {
-            sans: ["'Segoe UI'", 'system-ui', 'sans-serif'],
-          }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>g3nui — Human-in-the-Loop Engine</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        g: {
+          bg:'#0a0b0e', bg2:'#101218', sf:'#16181f', sf2:'#1c1f28',
+          bd:'#262a36', bd2:'#333848', tx:'#eaecf2', tx2:'#a0a5b8', tx3:'#5d6278',
+          ac:'#818cf8', ac2:'#6366f1', gn:'#34d399', am:'#fbbf24', rd:'#fb7185', cy:'#22d3ee'
         }
-      }
+      },
+      fontFamily: { sans: ["'Segoe UI'","system-ui","sans-serif"] }
     }
-  </script>
-  <style>
-    @keyframes spin { to { transform: rotate(360deg); } }
-    textarea:focus, input:focus { outline: none; border-color: #818cf8 !important; }
-    ::placeholder { color: #5d6278; }
-    ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-thumb { background: #262a36; border-radius: 10px; }
-    [v-cloak] { display: none; }
-  </style>
+  }
+}
+</script>
+<style>
+@keyframes spin { to { transform: rotate(360deg) } }
+textarea:focus, input:focus { outline:none; border-color:#818cf8 !important }
+::placeholder { color:#5d6278 }
+::-webkit-scrollbar { width:5px }
+::-webkit-scrollbar-thumb { background:#262a36; border-radius:10px }
+body { margin:0 }
+.sec-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:#5d6278; margin-bottom:10px }
+.btn-pri { font-family:inherit; font-size:12.5px; font-weight:600; padding:8px 18px; border-radius:8px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .12s; background:#818cf8; color:#fff }
+.btn-sec { font-family:inherit; font-size:12.5px; font-weight:600; padding:8px 18px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .12s; background:#1c1f28; color:#a0a5b8; border:1px solid #262a36 }
+.btn-ok  { font-family:inherit; font-size:12.5px; font-weight:600; padding:8px 18px; border-radius:8px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .12s; background:#34d399; color:#0a0b0e }
+.btn-warn{ font-family:inherit; font-size:12.5px; font-weight:600; padding:8px 18px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .12s; background:#fbbf2418; color:#fbbf24; border:1px solid #fbbf2433 }
+.btn-ghost{font-family:inherit; font-size:12.5px; font-weight:600; padding:8px 18px; border-radius:8px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .12s; background:transparent; color:#5d6278 }
+.btn-pri:hover{filter:brightness(1.1)} .btn-sec:hover{border-color:#333848} .btn-ok:hover{filter:brightness(1.1)} .btn-warn:hover{background:#fbbf2425} .btn-ghost:hover{color:#a0a5b8}
+.spinner { display:inline-block; width:16px; height:16px; border:2px solid transparent; border-top-color:currentColor; border-radius:50%; animation:spin .6s linear infinite }
+.spinner-lg { display:inline-block; width:24px; height:24px; border:2px solid transparent; border-top-color:currentColor; border-radius:50%; animation:spin .6s linear infinite }
+</style>
 </head>
-<body class="bg-g3n-bg text-g3n-tx font-sans min-h-screen">
+<body class="bg-g-bg text-g-tx font-sans min-h-screen">
 
-<div id="app" v-cloak>
+<div id="app">
   <div class="flex min-h-screen">
 
     <!-- ══ SIDEBAR ══ -->
-    <aside class="w-[250px] bg-g3n-bg2 border-r border-g3n-bd flex-shrink-0 flex flex-col overflow-y-auto" style="padding:20px 0">
-      <!-- Logo -->
-      <div class="px-4 pb-4 border-b border-g3n-bd mb-3">
+    <aside class="w-[250px] bg-g-bg2 border-r border-g-bd flex-shrink-0 flex flex-col overflow-y-auto" style="padding:20px 0">
+      <div class="px-4 pb-4 border-b border-g-bd mb-3">
         <h1 class="text-[15px] font-extrabold tracking-tight flex items-center gap-2">
-          <span class="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-extrabold text-g3n-bg"
+          <span class="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-extrabold text-g-bg"
                 style="background:linear-gradient(135deg,#818cf8,#22d3ee)">G</span>
           g3nui
         </h1>
-        <p class="text-[10.5px] text-g3n-tx3 mt-0.5">Human-in-the-Loop Engine</p>
+        <p class="text-[10.5px] text-g-tx3 mt-0.5">Human-in-the-Loop Engine</p>
       </div>
 
-      <!-- Workflow list -->
       <div class="px-2.5 flex-1">
-        <div class="text-[10px] font-bold uppercase tracking-[0.7px] text-g3n-tx3 mb-2.5">Workflows</div>
+        <div class="text-[10px] font-bold uppercase tracking-wider text-g-tx3 mb-2.5 px-1">Workflows</div>
         <div v-for="(w, i) in workflows" :key="w.id + i"
              @click="switchWf(i)"
              class="flex items-center gap-2 py-[7px] px-2.5 rounded-lg cursor-pointer mb-0.5 border transition-colors"
-             :class="i === wfIdx ? 'border-[#818cf833] bg-[#818cf814]' : 'border-transparent hover:bg-g3n-sf'">
-          <span class="w-[26px] h-[26px] rounded-md flex items-center justify-center text-[13px] flex-shrink-0"
-                :style="{ background: w.color + '22', color: w.color }">{{ w.icon }}</span>
+             :class="i === wfIdx ? 'border-g-ac/20 bg-g-ac/[0.08]' : 'border-transparent hover:bg-white/[0.02]'">
+          <span class="w-[26px] h-[26px] rounded-md flex items-center justify-center text-[13px]"
+                :style="{ background: w.color+'22', color: w.color }">{{ w.icon }}</span>
           <div>
-            <div class="text-xs" :class="i === wfIdx ? 'font-semibold text-g3n-ac' : 'font-medium text-g3n-tx'">{{ w.name }}</div>
-            <div class="text-[10px] text-g3n-tx3">{{ w.steps?.length || 0 }} Schritte</div>
+            <div class="text-xs" :class="i === wfIdx ? 'font-semibold text-g-ac' : 'font-medium text-g-tx'">{{ w.name }}</div>
+            <div class="text-[10px] text-g-tx3">{{ (w.steps||[]).length }} Schritte</div>
           </div>
         </div>
 
-        <!-- Import button -->
         <button @click="view = view === 'import' ? 'run' : 'import'"
-                class="w-full mt-3 py-2 px-2.5 text-[11.5px] font-semibold rounded-lg border border-dashed flex items-center justify-center gap-1.5 transition-colors cursor-pointer bg-transparent"
-                :class="view === 'import' ? 'border-g3n-ac text-g3n-ac' : 'border-g3n-bd text-g3n-tx3 hover:border-g3n-tx3'">
+                class="w-full mt-3 py-2 px-2.5 text-[11.5px] font-semibold rounded-lg flex items-center justify-center gap-1.5 border border-dashed transition-colors cursor-pointer bg-transparent"
+                :class="view === 'import' ? 'border-g-ac text-g-ac' : 'border-g-bd text-g-tx3 hover:border-g-tx3'">
           ⚡ n8n Workflow importieren
         </button>
       </div>
 
-      <!-- Webhook config -->
-      <div class="px-2.5 pt-3 border-t border-g3n-bd">
+      <div class="px-2.5 pt-3 border-t border-g-bd">
         <button @click="showCfg = !showCfg"
-                class="w-full text-[11px] font-semibold py-[7px] px-2.5 rounded-lg bg-transparent text-g3n-tx3 border-none cursor-pointer text-left flex items-center gap-1.5 hover:text-g3n-tx2 transition-colors">
+                class="w-full text-[11px] font-semibold py-[7px] px-2.5 text-left text-g-tx3 bg-transparent border-none cursor-pointer hover:text-g-tx2">
           ⚙ Webhook
         </button>
-        <div v-if="showCfg" class="mt-2 p-2.5 bg-g3n-sf border border-g3n-bd rounded-lg">
-          <label class="block text-[10px] font-bold uppercase tracking-[0.5px] text-g3n-tx3 mb-1">Webhook URL</label>
+        <div v-if="showCfg" class="mt-2 p-2.5 bg-g-sf border border-g-bd rounded-lg">
+          <label class="block text-[10px] font-bold uppercase tracking-wide text-g-tx3 mb-1">Webhook URL</label>
           <input v-model="webhook" placeholder="https://n8n.example.com/webhook/..."
-                 class="w-full bg-g3n-bg border border-g3n-bd rounded-[7px] px-3 py-2.5 text-[12.5px] text-g3n-tx font-mono outline-none transition-[border-color] duration-150" />
+                 class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2 text-xs text-g-tx font-mono outline-none transition-colors" />
         </div>
       </div>
     </aside>
@@ -104,76 +95,67 @@
       <!-- ═══ IMPORT VIEW ═══ -->
       <div v-if="view === 'import'" class="p-7">
         <h2 class="text-base font-bold mb-1">n8n Workflow importieren</h2>
-        <p class="text-[13px] text-g3n-tx2 mb-5">
-          Exportiere deinen n8n Workflow als JSON (⋯ → Download) und füge ihn hier ein. g3nui erkennt automatisch Webhook-Trigger, Formulare, IF/Switch-Nodes, LLM-Nodes und Aktions-Nodes und generiert daraus die passende UI.
+        <p class="text-[13px] text-g-tx2 mb-5">
+          Exportiere deinen n8n Workflow als JSON (⋯ → Download) und füge ihn hier ein.
+          g3nui erkennt automatisch Trigger, Formulare, IF/Switch, LLM und Aktions-Nodes.
         </p>
 
         <div class="flex gap-2.5 mb-3.5">
-          <input ref="fileInput" type="file" accept=".json" @change="handleFile" class="hidden" />
-          <button @click="$refs.fileInput.click()"
-                  class="inline-flex items-center gap-1.5 font-sans text-xs font-semibold py-2 px-[18px] rounded-lg cursor-pointer bg-g3n-sf2 text-g3n-tx2 border border-g3n-bd transition-all duration-[120ms] hover:bg-g3n-bd">
-            📁 JSON-Datei laden
-          </button>
-          <button @click="importJson = ''"
-                  class="inline-flex items-center gap-1.5 font-sans text-xs font-semibold py-2 px-[18px] rounded-lg cursor-pointer bg-transparent text-g3n-tx3 border-none transition-all duration-[120ms] hover:text-g3n-tx2">
-            ✕ Leeren
-          </button>
+          <input ref="fileRef" type="file" accept=".json" @change="handleFile" class="hidden" />
+          <button @click="$refs.fileRef.click()" class="btn-sec text-xs">📁 JSON-Datei laden</button>
+          <button @click="importJson = ''" class="btn-ghost text-xs">✕ Leeren</button>
         </div>
 
         <textarea v-model="importJson" rows="14"
                   placeholder='{ "name": "Mein Workflow", "nodes": [...], "connections": {...} }'
-                  class="w-full bg-g3n-bg border border-g3n-bd rounded-[7px] px-3 py-2.5 text-[12.5px] text-g3n-tx font-mono outline-none transition-[border-color] duration-150 min-h-[200px] resize-y leading-relaxed"></textarea>
+                  class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2.5 text-xs text-g-tx font-mono outline-none resize-y leading-relaxed"
+                  style="min-height:200px"></textarea>
 
-        <div v-if="importErr" class="mt-2 font-mono text-[11px] text-g3n-rd">{{ importErr }}</div>
+        <div v-if="importErr" class="mt-2 font-mono text-[11px] text-g-rd">{{ importErr }}</div>
 
         <div class="mt-3.5 flex gap-2">
           <button @click="handleImport" :disabled="!importJson.trim()"
-                  class="inline-flex items-center gap-1.5 font-sans text-[12.5px] font-semibold py-2 px-[18px] rounded-lg border-none cursor-pointer bg-g3n-ac text-white transition-all duration-[120ms]"
-                  :class="{ 'opacity-40 cursor-not-allowed': !importJson.trim() }">
+                  class="btn-pri" :class="{ 'opacity-40': !importJson.trim() }">
             🔍 Workflow analysieren
           </button>
         </div>
 
-        <!-- Import Preview -->
-        <div v-if="importPreview" class="mt-5 bg-g3n-sf border border-g3n-bd rounded-[10px] overflow-hidden">
-          <div class="px-5 py-4 border-b border-g3n-bd flex justify-between items-center">
+        <!-- Preview -->
+        <div v-if="importPreview" class="mt-5 bg-g-sf border border-g-bd rounded-xl overflow-hidden">
+          <div class="px-5 py-4 border-b border-g-bd flex justify-between items-center">
             <div>
               <h3 class="text-sm font-bold">{{ importPreview.icon }} {{ importPreview.name }}</h3>
-              <p class="text-[11.5px] text-g3n-tx2">{{ importPreview.description }}</p>
+              <p class="text-[11.5px] text-g-tx2">{{ importPreview.description }}</p>
             </div>
-            <button @click="confirmImport"
-                    class="inline-flex items-center gap-1.5 font-sans text-[12.5px] font-semibold py-2 px-[18px] rounded-lg border-none cursor-pointer bg-g3n-gn text-g3n-bg transition-all duration-[120ms]">
-              ✓ Importieren &amp; verwenden
-            </button>
+            <button @click="confirmImport" class="btn-ok">✓ Importieren &amp; verwenden</button>
           </div>
           <div class="p-5">
-            <div class="text-[10px] font-bold uppercase tracking-[0.7px] text-g3n-tx3 mb-2.5">Generierte Schritte ({{ importPreview.steps.length }})</div>
+            <div class="sec-label">Generierte Schritte ({{ importPreview.steps.length }})</div>
             <div class="flex items-center flex-wrap gap-0">
               <template v-for="(s, i) in importPreview.steps" :key="i">
-                <div class="bg-g3n-bg border border-g3n-bd rounded-lg py-2.5 px-3.5 min-w-[120px]">
-                  <div class="text-[10px] font-bold uppercase mb-1 tracking-[0.5px]"
-                       :class="s.type==='input' ? 'text-g3n-ac' : s.type==='check' ? 'text-g3n-am' : s.type==='edit' ? 'text-g3n-cy' : 'text-g3n-gn'">
-                    {{ s.type==='input' ? '📥 Eingabe' : s.type==='check' ? '🔍 Prüfung' : s.type==='edit' ? '✏️ Bearbeiten' : '✅ Freigabe' }}
+                <div class="bg-g-bg border border-g-bd rounded-lg py-2.5 px-3.5 min-w-[120px]">
+                  <div class="text-[10px] font-bold uppercase tracking-wide mb-1"
+                       :class="s.type==='input'?'text-g-ac':s.type==='check'?'text-g-am':s.type==='edit'?'text-g-cy':'text-g-gn'">
+                    {{ s.type==='input'?'📥 Eingabe':s.type==='check'?'🔍 Prüfung':s.type==='edit'?'✏️ Bearbeiten':'✅ Freigabe' }}
                   </div>
                   <div class="text-xs font-semibold">{{ s.label }}</div>
-                  <div class="text-[10.5px] text-g3n-tx3 mt-0.5">
-                    <template v-if="s.type==='input'">{{ s.fields?.length || 0 }} Felder</template>
-                    <template v-else-if="s.type==='check'">→ {{ s.action }}</template>
-                    <template v-else-if="s.type==='edit'">→ {{ s.action }}</template>
-                    <template v-else>{{ s.approveLabel }}</template>
+                  <div class="text-[10.5px] text-g-tx3 mt-0.5">
+                    <template v-if="s.type==='input'">{{ (s.fields||[]).length }} Felder</template>
+                    <template v-else-if="s.type==='review'">{{ s.approveLabel }}</template>
+                    <template v-else>→ {{ s.action }}</template>
                   </div>
                 </div>
-                <div v-if="i < importPreview.steps.length - 1" class="w-6 h-0.5 bg-g3n-bd flex-shrink-0"></div>
+                <div v-if="i < importPreview.steps.length - 1" class="w-6 h-0.5 bg-g-bd flex-shrink-0"></div>
               </template>
             </div>
             <div class="mt-5">
-              <div class="text-[10px] font-bold uppercase tracking-[0.7px] text-g3n-tx3 mb-2.5">Node-Mapping ({{ importPreview.nodeCount }} Nodes)</div>
-              <div class="text-xs text-g3n-tx2 leading-[1.8]">
-                Webhook/Trigger → <span class="text-g3n-ac">Eingabe-Schritt</span> ·
-                IF/Switch → <span class="text-g3n-am">Prüf-Schritt</span> ·
-                LLM/AI → <span class="text-g3n-cy">Bearbeitungs-Schritt</span> ·
-                HTTP/Jira/Slack → <span class="text-g3n-gn">Freigabe-Schritt</span> ·
-                Set/Code/Merge → <span class="text-g3n-tx3">übersprungen (Utility)</span>
+              <div class="sec-label">Node-Mapping ({{ importPreview.nodeCount }} Nodes)</div>
+              <div class="text-xs text-g-tx2 leading-7">
+                Webhook/Trigger → <span class="text-g-ac">Eingabe</span> ·
+                IF/Switch → <span class="text-g-am">Prüfung</span> ·
+                LLM/AI → <span class="text-g-cy">Bearbeitung</span> ·
+                HTTP/Jira/Slack → <span class="text-g-gn">Freigabe</span> ·
+                Set/Code/Merge → <span class="text-g-tx3">übersprungen</span>
               </div>
             </div>
           </div>
@@ -182,243 +164,180 @@
 
       <!-- ═══ RUN VIEW ═══ -->
       <template v-if="view === 'run'">
-        <!-- Header -->
-        <div class="px-7 py-4 border-b border-g3n-bd flex items-center justify-between">
+        <div class="px-7 py-4 border-b border-g-bd flex items-center justify-between">
           <div>
             <span class="text-[15px] font-bold">{{ wf.name }}</span>
-            <span class="text-xs text-g3n-tx2 ml-2.5">{{ wf.description }}</span>
+            <span class="text-xs text-g-tx2 ml-2.5">{{ wf.description }}</span>
           </div>
           <div class="flex gap-2">
-            <button v-if="step > 0" @click="reset"
-                    class="inline-flex items-center gap-1.5 font-sans text-[12.5px] font-semibold py-2 px-[18px] rounded-lg cursor-pointer bg-transparent text-g3n-tx3 border-none transition-all duration-[120ms] hover:text-g3n-tx2">
-              ↺ Neustart
-            </button>
-            <button @click="view = 'inspect'"
-                    class="inline-flex items-center gap-1.5 font-sans text-[11px] font-semibold py-2 px-[18px] rounded-lg cursor-pointer bg-transparent text-g3n-tx3 border-none transition-all duration-[120ms] hover:text-g3n-tx2">
-              { } JSON
-            </button>
+            <button v-if="step > 0" @click="reset" class="btn-ghost">↺ Neustart</button>
+            <button @click="view = 'inspect'" class="btn-ghost text-[11px]">{ } JSON</button>
           </div>
         </div>
 
         <div class="px-7 py-6">
           <!-- Stepper -->
           <div class="flex items-center mb-6 overflow-x-auto pb-1">
-            <template v-for="(s, i) in (wf.steps || [])" :key="i">
+            <template v-for="(s, i) in (wf.steps||[])" :key="i">
               <div class="flex items-center gap-[7px] flex-shrink-0">
                 <span class="w-[26px] h-[26px] rounded-full flex items-center justify-center text-[11px] font-bold border-2"
-                      :class="step > i ? 'border-g3n-gn bg-g3n-gn text-g3n-bg' : step === i ? 'border-g3n-ac bg-g3n-ac text-g3n-bg' : 'border-g3n-bd bg-g3n-sf text-g3n-tx3'">
+                      :class="step > i ? 'border-g-gn bg-g-gn text-g-bg' : step === i ? 'border-g-ac bg-g-ac text-g-bg' : 'border-g-bd bg-g-sf text-g-tx3'">
                   {{ step > i ? '✓' : i + 1 }}
                 </span>
-                <span class="text-xs"
-                      :class="step > i ? 'text-g3n-gn font-semibold' : step === i ? 'text-g3n-tx font-semibold' : 'text-g3n-tx3 font-medium'">
+                <span class="text-xs" :class="step > i ? 'font-medium text-g-gn' : step === i ? 'font-semibold text-g-tx' : 'font-medium text-g-tx3'">
                   {{ s.label }}
                 </span>
               </div>
               <div v-if="i < wf.steps.length - 1"
                    class="flex-1 h-0.5 mx-3 min-w-[20px]"
-                   :class="step > i ? 'bg-[#34d39944]' : 'bg-g3n-bd'"></div>
+                   :class="step > i ? 'bg-g-gn/25' : 'bg-g-bd'"></div>
             </template>
           </div>
 
           <!-- Step Card -->
-          <div class="bg-g3n-sf border border-g3n-bd rounded-xl overflow-hidden">
+          <div class="bg-g-sf border border-g-bd rounded-xl overflow-hidden">
 
-            <!-- ── INPUT STEP ── -->
+            <!-- INPUT STEP -->
             <template v-if="sd.type === 'input'">
               <div class="p-[22px]">
-                <div class="text-[10px] font-bold uppercase tracking-[0.7px] text-g3n-tx3 mb-2.5">{{ sd.title }}</div>
+                <div class="sec-label">{{ sd.title }}</div>
                 <div v-for="f in (sd.fields || [])" :key="f.key" class="mb-3">
-                  <label class="block text-[10px] font-bold uppercase tracking-[0.5px] text-g3n-tx3 mb-1">{{ f.label }}</label>
-                  <input v-if="f.type === 'text'"
-                         v-model="form[f.key]" @keydown.enter="execInput"
+                  <label class="block text-[10px] font-bold uppercase tracking-wide text-g-tx3 mb-1">{{ f.label }}</label>
+                  <input v-if="f.type === 'text'" v-model="form[f.key]" @keydown.enter="execInput"
                          :placeholder="f.placeholder || ''"
-                         class="w-full bg-g3n-bg border border-g3n-bd rounded-[7px] px-3 py-2.5 text-[12.5px] text-g3n-tx font-mono outline-none transition-[border-color] duration-150" />
-                  <textarea v-else-if="f.type === 'textarea'"
-                            v-model="form[f.key]" :placeholder="f.placeholder || ''" rows="3"
-                            class="w-full bg-g3n-bg border border-g3n-bd rounded-[7px] px-3 py-2.5 text-[12.5px] text-g3n-tx outline-none transition-[border-color] duration-150 resize-y"></textarea>
-                  <select v-else-if="f.type === 'select'"
-                          v-model="form[f.key]"
-                          class="w-full bg-g3n-bg border border-g3n-bd rounded-[7px] px-3 py-2.5 text-[12.5px] text-g3n-tx outline-none cursor-pointer transition-[border-color] duration-150">
+                         class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2.5 text-xs text-g-tx font-mono outline-none transition-colors" />
+                  <textarea v-else-if="f.type === 'textarea'" v-model="form[f.key]"
+                            :placeholder="f.placeholder || ''" rows="3"
+                            class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2.5 text-xs text-g-tx outline-none resize-y transition-colors"></textarea>
+                  <select v-else-if="f.type === 'select'" v-model="form[f.key]"
+                          class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2.5 text-xs text-g-tx cursor-pointer outline-none transition-colors">
                     <option v-for="o in (f.options || [])" :key="o" :value="o">{{ o }}</option>
                   </select>
                 </div>
               </div>
-              <div class="px-[22px] py-3 bg-g3n-bg2 border-t border-g3n-bd flex justify-end gap-2">
-                <button v-if="wf.demo" @click="loadDemo"
-                        class="inline-flex items-center gap-1.5 font-sans text-[12.5px] font-semibold py-2 px-[18px] rounded-lg cursor-pointer bg-transparent text-g3n-tx3 border-none transition-all duration-[120ms] hover:text-g3n-tx2">
-                  Demo laden
-                </button>
-                <button @click="execInput" :disabled="loading"
-                        class="inline-flex items-center gap-1.5 font-sans text-[12.5px] font-semibold py-2 px-[18px] rounded-lg border-none cursor-pointer bg-g3n-ac text-white transition-all duration-[120ms]"
-                        :class="{ 'opacity-40': loading }">
-                  <span v-if="loading" class="inline-block w-4 h-4 border-2 border-transparent border-t-current rounded-full animate-spin"></span>
+              <div class="px-[22px] py-3 bg-g-bg2 border-t border-g-bd flex justify-end gap-2">
+                <button v-if="wf.demo" @click="loadDemo" class="btn-ghost">Demo laden</button>
+                <button @click="execInput" :disabled="loading" class="btn-pri" :class="{ 'opacity-40': loading }">
+                  <span v-if="loading" class="spinner"></span>
                   <template v-else>{{ sd.actionLabel || 'Weiter' }} →</template>
                 </button>
               </div>
             </template>
 
-            <!-- ── CHECK STEP ── -->
+            <!-- CHECK STEP -->
             <template v-if="sd.type === 'check'">
               <div class="p-[22px]">
                 <div v-if="ctx.tags" class="mb-2">
                   <span v-for="(t, ti) in ctx.tags" :key="ti"
-                        class="font-mono text-[10.5px] font-medium py-[3px] px-[9px] rounded-[20px] mr-[5px] inline-block"
-                        :style="{ background: tagColor(t.s) + '18', color: tagColor(t.s) }">
-                    {{ t.text }}
-                  </span>
+                        class="font-mono text-[10.5px] font-medium py-[3px] px-[9px] rounded-full mr-1.5 inline-block"
+                        :style="tagStyle(t.s)">{{ t.text }}</span>
                 </div>
                 <div v-if="ctx.title" class="text-[15px] font-bold mb-2">{{ ctx.title }}</div>
-                <div v-if="ctx.preview" class="text-[13px] text-g3n-tx2 leading-[1.7] whitespace-pre-wrap mb-[18px]">{{ ctx.preview }}</div>
+                <div v-if="ctx.preview" class="text-[13px] text-g-tx2 leading-7 whitespace-pre-wrap mb-4">{{ ctx.preview }}</div>
 
-                <!-- Loading -->
-                <div v-if="loading" class="text-center py-7 text-g3n-tx3">
-                  <span class="inline-block w-6 h-6 border-2 border-transparent border-t-current rounded-full" style="animation:spin .6s linear infinite"></span>
+                <div v-if="loading" class="text-center py-7 text-g-tx3">
+                  <span class="spinner spinner-lg"></span>
                   <p class="mt-2.5 text-[13px]">{{ sd.loadingText || 'Prüfung…' }}</p>
                 </div>
-
-                <!-- Check results -->
                 <template v-else-if="checks.length > 0">
-                  <div class="text-[10px] font-bold uppercase tracking-[0.7px] text-g3n-tx3 mb-2.5">{{ sd.title }}</div>
+                  <div class="sec-label">{{ sd.title }}</div>
                   <div v-for="(item, ci) in checks" :key="ci"
-                       class="flex items-start gap-[11px] py-2.5"
-                       :class="ci < checks.length - 1 ? 'border-b border-g3n-bd' : ''">
-                    <!-- Check icon -->
-                    <span class="w-5 h-5 rounded-full inline-flex items-center justify-center text-[10px] flex-shrink-0"
-                          :style="{ background: chkStyle(item.s).bg, color: chkStyle(item.s).c }">
-                      {{ chkStyle(item.s).t }}
+                       class="flex items-start gap-3 py-2.5"
+                       :class="ci < checks.length - 1 ? 'border-b border-g-bd' : ''">
+                    <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] flex-shrink-0"
+                          :class="item.s==='pass'?'bg-g-gn/10 text-g-gn':item.s==='fail'?'bg-g-rd/10 text-g-rd':'bg-g-am/10 text-g-am'">
+                      {{ item.s==='pass'?'✓':item.s==='fail'?'✕':'!' }}
                     </span>
                     <div>
                       <div class="text-[13px] font-medium">{{ item.c }}</div>
-                      <div class="text-xs text-g3n-tx2 mt-[1px]">{{ item.d }}</div>
+                      <div class="text-xs text-g-tx2 mt-0.5">{{ item.d }}</div>
                     </div>
                   </div>
-                  <!-- Summary -->
-                  <div class="flex gap-3.5 mt-4 p-3 bg-g3n-bg rounded-lg border border-g3n-bd">
-                    <div v-for="([s, c, l]) in [['pass','#34d399','Erfüllt'],['warn','#fbbf24','Teilweise'],['fail','#fb7185','Fehlt']]" :key="s"
-                         class="text-center flex-1">
-                      <div class="text-xl font-bold" :style="{ color: c }">{{ cnt(s) }}</div>
-                      <div class="text-[9.5px] uppercase tracking-[0.5px] text-g3n-tx3">{{ l }}</div>
+                  <div class="flex gap-3.5 mt-4 p-3 bg-g-bg rounded-lg border border-g-bd">
+                    <div v-for="[s, cls, l] in [['pass','text-g-gn','Erfüllt'],['warn','text-g-am','Teilweise'],['fail','text-g-rd','Fehlt']]"
+                         :key="s" class="text-center flex-1">
+                      <div class="text-xl font-bold" :class="cls">{{ cnt(s) }}</div>
+                      <div class="text-[9.5px] uppercase tracking-wide text-g-tx3">{{ l }}</div>
                     </div>
                   </div>
                 </template>
               </div>
-              <!-- Check footer -->
               <div v-if="!loading && checks.length > 0"
-                   class="px-[22px] py-3 bg-g3n-bg2 border-t border-g3n-bd flex justify-between flex-wrap gap-2">
-                <button @click="step--"
-                        class="inline-flex items-center gap-1.5 font-sans text-[12.5px] font-semibold py-2 px-[18px] rounded-lg cursor-pointer bg-g3n-sf2 text-g3n-tx2 border border-g3n-bd transition-all duration-[120ms]">
-                  ← Zurück
-                </button>
+                   class="px-[22px] py-3 bg-g-bg2 border-t border-g-bd flex justify-between flex-wrap gap-2">
+                <button @click="step--" class="btn-sec">← Zurück</button>
                 <div class="flex gap-2">
-                  <button @click="execCheck"
-                          class="inline-flex items-center gap-1.5 font-sans text-[12.5px] font-semibold py-2 px-[18px] rounded-lg cursor-pointer border transition-all duration-[120ms]"
-                          style="background:#fbbf2418;color:#fbbf24;border-color:#fbbf2433">
-                    ↻ Nochmal
-                  </button>
-                  <button @click="goEdit"
-                          class="inline-flex items-center gap-1.5 font-sans text-[12.5px] font-semibold py-2 px-[18px] rounded-lg border-none cursor-pointer bg-g3n-ac text-white transition-all duration-[120ms]">
-                    {{ sd.nextLabel || 'Weiter' }} →
-                  </button>
+                  <button @click="execCheck" class="btn-warn">↻ Nochmal</button>
+                  <button @click="goEdit" class="btn-pri">{{ sd.nextLabel || 'Weiter' }} →</button>
                 </div>
               </div>
             </template>
 
-            <!-- ── EDIT STEP ── -->
+            <!-- EDIT STEP -->
             <template v-if="sd.type === 'edit'">
               <div class="p-[22px]">
-                <div class="text-[10px] font-bold uppercase tracking-[0.7px] text-g3n-tx3 mb-2.5">{{ sd.title }}</div>
-                <!-- Loading -->
-                <div v-if="loading" class="text-center py-7 text-g3n-tx3">
-                  <span class="inline-block w-6 h-6 border-2 border-transparent border-t-current rounded-full" style="animation:spin .6s linear infinite"></span>
+                <div class="sec-label">{{ sd.title }}</div>
+                <div v-if="loading" class="text-center py-7 text-g-tx3">
+                  <span class="spinner spinner-lg"></span>
                   <p class="mt-2.5 text-[13px]">{{ sd.loadingText || 'Generiert…' }}</p>
                 </div>
                 <template v-else>
                   <div class="mb-3">
-                    <label class="block text-[10px] font-bold uppercase tracking-[0.5px] text-g3n-tx3 mb-1">Anweisungen (optional)</label>
+                    <label class="block text-[10px] font-bold uppercase tracking-wide text-g-tx3 mb-1">Anweisungen (optional)</label>
                     <textarea v-model="instr" :placeholder="sd.instrPlaceholder || 'Korrekturhinweise…'" rows="2"
-                              class="w-full bg-g3n-bg border border-g3n-bd rounded-[7px] px-3 py-2.5 text-xs text-g3n-tx outline-none transition-[border-color] duration-150 resize-y"></textarea>
+                              class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2.5 text-xs text-g-tx outline-none resize-y transition-colors"></textarea>
                   </div>
-                  <label class="block text-[10px] font-bold uppercase tracking-[0.5px] text-g3n-tx3 mb-1">{{ sd.editLabel || 'Inhalt' }}</label>
+                  <label class="block text-[10px] font-bold uppercase tracking-wide text-g-tx3 mb-1">{{ sd.editLabel || 'Inhalt' }}</label>
                   <textarea v-model="text" rows="10"
-                            class="w-full bg-g3n-bg border border-g3n-bd rounded-[7px] px-3 py-2.5 text-[12.5px] text-g3n-tx outline-none transition-[border-color] duration-150 min-h-[180px] resize-y leading-[1.7]"></textarea>
+                            class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2.5 text-[13px] text-g-tx outline-none resize-y leading-7 transition-colors"
+                            style="min-height:180px"></textarea>
                 </template>
               </div>
-              <div v-if="!loading"
-                   class="px-[22px] py-3 bg-g3n-bg2 border-t border-g3n-bd flex justify-between flex-wrap gap-2">
-                <button @click="step--"
-                        class="inline-flex items-center gap-1.5 font-sans text-[12.5px] font-semibold py-2 px-[18px] rounded-lg cursor-pointer bg-g3n-sf2 text-g3n-tx2 border border-g3n-bd transition-all duration-[120ms]">
-                  ← Zurück
-                </button>
+              <div v-if="!loading" class="px-[22px] py-3 bg-g-bg2 border-t border-g-bd flex justify-between flex-wrap gap-2">
+                <button @click="step--" class="btn-sec">← Zurück</button>
                 <div class="flex gap-2">
-                  <button @click="improve" :disabled="loading"
-                          class="inline-flex items-center gap-1.5 font-sans text-[12.5px] font-semibold py-2 px-[18px] rounded-lg cursor-pointer border transition-all duration-[120ms]"
-                          style="background:#fbbf2418;color:#fbbf24;border-color:#fbbf2433">
-                    ✦ Verbessern
-                  </button>
-                  <button @click="step++"
-                          class="inline-flex items-center gap-1.5 font-sans text-[12.5px] font-semibold py-2 px-[18px] rounded-lg border-none cursor-pointer bg-g3n-ac text-white transition-all duration-[120ms]">
-                    {{ sd.nextLabel || 'Freigabe' }} →
-                  </button>
+                  <button @click="improve" :disabled="loading" class="btn-warn">✦ Verbessern</button>
+                  <button @click="step++" class="btn-pri">{{ sd.nextLabel || 'Freigabe' }} →</button>
                 </div>
               </div>
             </template>
 
-            <!-- ── REVIEW STEP ── -->
+            <!-- REVIEW STEP -->
             <template v-if="sd.type === 'review'">
               <div class="p-[22px]">
-                <!-- Not done -->
                 <template v-if="!done">
-                  <div class="text-[10px] font-bold uppercase tracking-[0.7px] text-g3n-tx3 mb-2.5">{{ sd.title }}</div>
+                  <div class="sec-label">{{ sd.title }}</div>
                   <div v-if="ctx.tags" class="mb-2">
                     <span v-for="(t, ti) in ctx.tags" :key="ti"
-                          class="font-mono text-[10.5px] font-medium py-[3px] px-[9px] rounded-[20px] mr-[5px] inline-block"
-                          :style="{ background: tagColor(t.s) + '18', color: tagColor(t.s) }">
-                      {{ t.text }}
-                    </span>
+                          class="font-mono text-[10.5px] font-medium py-[3px] px-[9px] rounded-full mr-1.5 inline-block"
+                          :style="tagStyle(t.s)">{{ t.text }}</span>
                   </div>
-                  <div class="bg-g3n-bg border border-g3n-bd rounded-lg p-4">
-                    <pre class="font-sans text-[13px] text-g3n-tx whitespace-pre-wrap leading-[1.7] m-0">{{ text || '(Kein Inhalt)' }}</pre>
+                  <div class="bg-g-bg border border-g-bd rounded-lg p-4">
+                    <pre class="font-sans text-[13px] text-g-tx whitespace-pre-wrap leading-7 m-0">{{ text || '(Kein Inhalt)' }}</pre>
                   </div>
                 </template>
-                <!-- Done -->
                 <template v-else>
                   <div class="text-center py-8 px-5">
                     <div class="text-[38px] mb-2.5">✅</div>
                     <h2 class="text-[17px] font-bold mb-1">{{ sd.doneTitle || 'Abgeschlossen' }}</h2>
-                    <p class="text-g3n-tx2 text-[13px]">{{ sd.doneText || 'Workflow abgeschlossen.' }}</p>
-                    <div class="mt-3.5 bg-g3n-bg border border-g3n-bd rounded-lg p-4 text-left">
-                      <pre class="font-sans text-[13px] text-g3n-tx whitespace-pre-wrap leading-[1.7] m-0">{{ text }}</pre>
+                    <p class="text-g-tx2 text-[13px]">{{ sd.doneText || 'Workflow abgeschlossen.' }}</p>
+                    <div class="mt-3.5 bg-g-bg border border-g-bd rounded-lg p-4 text-left">
+                      <pre class="font-sans text-[13px] text-g-tx whitespace-pre-wrap leading-7 m-0">{{ text }}</pre>
                     </div>
                   </div>
                 </template>
               </div>
-              <!-- Review footer: not done -->
-              <div v-if="!done"
-                   class="px-[22px] py-3 bg-g3n-bg2 border-t border-g3n-bd flex justify-between flex-wrap gap-2">
-                <button @click="step--"
-                        class="inline-flex items-center gap-1.5 font-sans text-[12.5px] font-semibold py-2 px-[18px] rounded-lg cursor-pointer bg-g3n-sf2 text-g3n-tx2 border border-g3n-bd transition-all duration-[120ms]">
-                  ← Bearbeiten
-                </button>
+              <div v-if="!done" class="px-[22px] py-3 bg-g-bg2 border-t border-g-bd flex justify-between flex-wrap gap-2">
+                <button @click="step--" class="btn-sec">← Bearbeiten</button>
                 <div class="flex gap-2">
-                  <button @click="goBackToEdit"
-                          class="inline-flex items-center gap-1.5 font-sans text-[12.5px] font-semibold py-2 px-[18px] rounded-lg cursor-pointer border transition-all duration-[120ms]"
-                          style="background:#fbbf2418;color:#fbbf24;border-color:#fbbf2433">
-                    ↻ Nochmal
-                  </button>
-                  <button @click="approve" :disabled="loading"
-                          class="inline-flex items-center gap-1.5 font-sans text-[12.5px] font-semibold py-2 px-[18px] rounded-lg border-none cursor-pointer bg-g3n-gn text-g3n-bg transition-all duration-[120ms]"
-                          :class="{ 'opacity-40': loading }">
-                    <span v-if="loading" class="inline-block w-4 h-4 border-2 border-transparent border-t-current rounded-full animate-spin"></span>
+                  <button @click="goBackToEdit" class="btn-warn">↻ Nochmal</button>
+                  <button @click="approve" :disabled="loading" class="btn-ok" :class="{ 'opacity-40': loading }">
+                    <span v-if="loading" class="spinner"></span>
                     <template v-else>✓ {{ sd.approveLabel || 'Freigeben' }}</template>
                   </button>
                 </div>
               </div>
-              <!-- Review footer: done -->
-              <div v-else class="px-[22px] py-3 bg-g3n-bg2 border-t border-g3n-bd flex justify-center">
-                <button @click="reset"
-                        class="inline-flex items-center gap-1.5 font-sans text-[12.5px] font-semibold py-2 px-[18px] rounded-lg cursor-pointer bg-g3n-sf2 text-g3n-tx2 border border-g3n-bd transition-all duration-[120ms]">
-                  Neuen Durchlauf
-                </button>
+              <div v-else class="px-[22px] py-3 bg-g-bg2 border-t border-g-bd flex justify-center">
+                <button @click="reset" class="btn-sec">Neuen Durchlauf</button>
               </div>
             </template>
 
@@ -426,12 +345,12 @@
 
           <!-- Log -->
           <div v-if="logs.length > 0" class="mt-5">
-            <div class="text-[10px] font-bold uppercase tracking-[0.7px] text-g3n-tx3 mb-2.5">Log</div>
+            <div class="sec-label">Log</div>
             <div v-for="(l, li) in logs" :key="li"
-                 class="font-mono text-[10.5px] text-g3n-tx3 py-[3px] flex gap-2.5"
-                 :style="{ borderBottom: '1px solid #262a3622' }">
+                 class="font-mono text-[10.5px] text-g-tx3 py-[3px] flex gap-2.5"
+                 :class="li < logs.length - 1 ? 'border-b border-g-bd/15' : ''">
               <span>{{ l.t }}</span>
-              <span :class="l.ok ? 'text-g3n-gn' : 'text-g3n-rd'">{{ l.m }}</span>
+              <span :class="l.ok ? 'text-g-gn' : 'text-g-rd'">{{ l.m }}</span>
             </div>
           </div>
         </div>
@@ -441,12 +360,10 @@
       <div v-if="view === 'inspect'" class="p-7">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-base font-bold">Workflow-Config: {{ wf.name }}</h2>
-          <button @click="view = 'run'"
-                  class="inline-flex items-center gap-1.5 font-sans text-[12.5px] font-semibold py-2 px-[18px] rounded-lg cursor-pointer bg-g3n-sf2 text-g3n-tx2 border border-g3n-bd transition-all duration-[120ms]">
-            ← Zurück
-          </button>
+          <button @click="view = 'run'" class="btn-sec">← Zurück</button>
         </div>
-        <pre class="w-full bg-g3n-bg border border-g3n-bd rounded-[7px] px-3 py-2.5 text-[12.5px] text-g3n-tx font-mono min-h-[300px] whitespace-pre-wrap leading-relaxed overflow-auto">{{ JSON.stringify(wf, null, 2) }}</pre>
+        <pre class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2.5 text-xs text-g-tx font-mono whitespace-pre-wrap leading-relaxed overflow-auto"
+             style="min-height:300px">{{ JSON.stringify(wf, null, 2) }}</pre>
       </div>
 
     </main>
@@ -456,33 +373,59 @@
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script>
 // ══════════════════════════════════════════
-//  THEME (kept for dynamic inline styles)
+//  THEME (for dynamic inline styles)
 // ══════════════════════════════════════════
 const T = {
-  bg:"#0a0b0e", bg2:"#101218", sf:"#16181f", sf2:"#1c1f28",
-  bd:"#262a36", bd2:"#333848", tx:"#eaecf2", tx2:"#a0a5b8", tx3:"#5d6278",
-  ac:"#818cf8", ac2:"#6366f1", gn:"#34d399", am:"#fbbf24", rd:"#fb7185", cy:"#22d3ee"
+  bg:'#0a0b0e', bg2:'#101218', sf:'#16181f', sf2:'#1c1f28',
+  bd:'#262a36', bd2:'#333848', tx:'#eaecf2', tx2:'#a0a5b8', tx3:'#5d6278',
+  ac:'#818cf8', ac2:'#6366f1', gn:'#34d399', am:'#fbbf24', rd:'#fb7185', cy:'#22d3ee'
 };
+
+// ══════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════
+function slugify(s) { return (s||'').toLowerCase().replace(/[^a-z0-9äöüß]+/g,'_').replace(/^_|_$/g,'').slice(0,40); }
+
+function extractConditions(params) {
+  const conds = params.conditions?.conditions || [];
+  return conds.map(c => `${c.leftValue||'?'} ${c.operation||'?'} ${c.rightValue||'?'}`);
+}
+
+function extractEditLabel(params, name) {
+  if (name.toLowerCase().includes('rewrite') || name.toLowerCase().includes('umschreib')) return 'Umgeschriebener Text';
+  if (name.toLowerCase().includes('reply') || name.toLowerCase().includes('antwort')) return 'Generierte Antwort';
+  return 'Generierter Inhalt';
+}
+
+function getApproveLabel(node) {
+  const t = (node.type||'').toLowerCase();
+  const n = (node.name||'').toLowerCase();
+  if (t.includes('jira')) return 'Nach Jira schreiben';
+  if (t.includes('slack')) return 'An Slack senden';
+  if (t.includes('email') || t.includes('gmail')) return 'E-Mail senden';
+  if (t.includes('notion')) return 'In Notion speichern';
+  if (t.includes('googlesheets')) return 'In Sheets schreiben';
+  if (n.includes('datev')) return 'DATEV-Export';
+  return 'Ausführen';
+}
 
 // ══════════════════════════════════════════
 //  n8n JSON → g3nui Workflow PARSER
 // ══════════════════════════════════════════
 function parseN8nWorkflow(json) {
   let data;
-  try { data = typeof json === "string" ? JSON.parse(json) : json; } catch(e) { throw new Error("Ungültiges JSON: " + e.message); }
+  try { data = typeof json === 'string' ? JSON.parse(json) : json; } catch(e) { throw new Error('Ungültiges JSON: ' + e.message); }
 
   const nodes = data.nodes || [];
   const connections = data.connections || {};
-  const wfName = data.name || "Importierter Workflow";
+  const wfName = data.name || 'Importierter Workflow';
 
   const adj = {};
   for (const [fromName, outs] of Object.entries(connections)) {
     if (!adj[fromName]) adj[fromName] = [];
     const mainOut = outs.main || [];
     for (const branch of mainOut) {
-      for (const conn of (branch || [])) {
-        adj[fromName].push(conn.node);
-      }
+      for (const conn of (branch || [])) { adj[fromName].push(conn.node); }
     }
   }
 
@@ -490,34 +433,26 @@ function parseN8nWorkflow(json) {
   nodes.forEach(n => { nodeMap[n.name] = n; });
 
   const classify = (n) => {
-    const t = (n.type || "").toLowerCase();
-    const name = (n.name || "").toLowerCase();
-    if (t.includes("webhook") || t.includes("trigger") || t.includes("formtrigger") || t.includes("form-trigger"))
-      return "trigger";
-    if (t.includes("form") || t.includes("n8n-nodes-base.form"))
-      return "input";
-    if (t.includes("if") || t.includes("switch") || t.includes("compare") || t.includes("filter"))
-      return "check";
-    if (t.includes("openai") || t.includes("ollama") || t.includes("anthropic") || t.includes("langchain")
-      || t.includes("lmchatmodel") || t.includes("chatmodel") || (t.includes("ai") && !t.includes("wait"))
-      || name.includes("llm") || name.includes("ai ") || name.includes("gpt") || name.includes("rewrite")
-      || name.includes("generate") || name.includes("verbessern") || name.includes("umschreiben"))
-      return "ai";
-    if (t.includes("httprequest") || t.includes("jira") || t.includes("slack") || t.includes("email")
-      || t.includes("gmail") || t.includes("send") || t.includes("datev") || t.includes("notion")
-      || t.includes("airtable") || t.includes("googlesheets"))
-      return "action";
-    if (t.includes("wait") || t.includes("approval") || name.includes("wait") || name.includes("human"))
-      return "human";
-    if (t.includes("set") || t.includes("function") || t.includes("code") || t.includes("merge")
-      || t.includes("splitinbatches") || t.includes("noop") || t.includes("aggregate"))
-      return "util";
-    return "unknown";
+    const t = (n.type || '').toLowerCase();
+    const name = (n.name || '').toLowerCase();
+    if (t.includes('webhook') || t.includes('trigger') || t.includes('formtrigger') || t.includes('form-trigger')) return 'trigger';
+    if (t.includes('form') || t.includes('n8n-nodes-base.form')) return 'input';
+    if (t.includes('if') || t.includes('switch') || t.includes('compare') || t.includes('filter')) return 'check';
+    if (t.includes('openai') || t.includes('ollama') || t.includes('anthropic') || t.includes('langchain')
+      || t.includes('lmchatmodel') || t.includes('chatmodel') || (t.includes('ai') && !t.includes('wait'))
+      || name.includes('llm') || name.includes('ai ') || name.includes('gpt') || name.includes('rewrite')
+      || name.includes('generate') || name.includes('verbessern') || name.includes('umschreiben')) return 'ai';
+    if (t.includes('httprequest') || t.includes('jira') || t.includes('slack') || t.includes('email')
+      || t.includes('gmail') || t.includes('send') || t.includes('datev') || t.includes('notion')
+      || t.includes('airtable') || t.includes('googlesheets')) return 'action';
+    if (t.includes('wait') || t.includes('approval') || name.includes('wait') || name.includes('human')) return 'human';
+    if (t.includes('set') || t.includes('function') || t.includes('code') || t.includes('merge')
+      || t.includes('splitinbatches') || t.includes('noop') || t.includes('aggregate')) return 'util';
+    return 'unknown';
   };
 
-  const triggers = nodes.filter(n => classify(n) === "trigger");
+  const triggers = nodes.filter(n => classify(n) === 'trigger');
   const startNodes = triggers.length > 0 ? triggers : [nodes[0]];
-
   const visited = new Set();
   const ordered = [];
   const queue = startNodes.map(n => n.name);
@@ -528,179 +463,155 @@ function parseN8nWorkflow(json) {
     visited.add(name);
     const node = nodeMap[name];
     if (node) ordered.push(node);
-    for (const next of (adj[name] || [])) {
-      if (!visited.has(next)) queue.push(next);
-    }
+    for (const next of (adj[name] || [])) { if (!visited.has(next)) queue.push(next); }
   }
   nodes.forEach(n => { if (!visited.has(n.name)) ordered.push(n); });
 
   const steps = [];
-  let webhookUrl = "";
+  let webhookUrl = '';
 
   for (const node of ordered) {
     const cls = classify(node);
     const params = node.parameters || {};
-    const nodeName = node.name || "Unbenannt";
+    const nodeName = node.name || 'Unbenannt';
 
     switch (cls) {
-      case "trigger": {
+      case 'trigger': {
         if (params.path) webhookUrl = params.path;
         if (params.httpMethod) webhookUrl += ` (${params.httpMethod})`;
         const formFields = params.formFields?.values || params.options?.formFields || [];
         if (formFields.length > 0) {
           steps.push({
-            label: nodeName, type: "input", title: nodeName,
-            actionLabel: "Absenden", action: slugify(nodeName),
+            label: nodeName, type: 'input', title: nodeName,
+            actionLabel: 'Absenden', action: slugify(nodeName),
             fields: formFields.map(f => ({
-              key: f.fieldLabel?.toLowerCase().replace(/\s+/g,"_") || f.name || `f_${Math.random().toString(36).slice(2,6)}`,
-              label: f.fieldLabel || f.name || "Feld",
-              type: f.fieldType === "textarea" ? "textarea" : f.fieldType === "dropdown" ? "select" : "text",
-              placeholder: f.placeholder || "",
+              key: f.fieldLabel?.toLowerCase().replace(/\s+/g,'_') || f.name || `f_${Math.random().toString(36).slice(2,6)}`,
+              label: f.fieldLabel || f.name || 'Feld',
+              type: f.fieldType === 'textarea' ? 'textarea' : f.fieldType === 'dropdown' ? 'select' : 'text',
+              placeholder: f.placeholder || '',
               options: f.fieldOptions?.values?.map(o => o.option) || undefined
             }))
           });
         } else {
           steps.push({
-            label: nodeName, type: "input", title: `${nodeName} — Daten eingeben`,
-            actionLabel: "Starten", action: slugify(nodeName),
-            fields: [{ key: "input_data", label: "Eingabe", type: "textarea", placeholder: "Daten eingeben oder einfügen…" }]
+            label: nodeName, type: 'input', title: `${nodeName} — Daten eingeben`,
+            actionLabel: 'Starten', action: slugify(nodeName),
+            fields: [{ key: 'input_data', label: 'Eingabe', type: 'textarea', placeholder: 'Daten eingeben oder einfügen…' }]
           });
         }
         break;
       }
-      case "input": {
+      case 'input': {
         const formFields = params.formFields?.values || [];
         steps.push({
-          label: nodeName, type: "input", title: nodeName,
-          actionLabel: params.buttonLabel || "Weiter", action: slugify(nodeName),
+          label: nodeName, type: 'input', title: nodeName,
+          actionLabel: params.buttonLabel || 'Weiter', action: slugify(nodeName),
           fields: formFields.length > 0
             ? formFields.map(f => ({
-                key: f.fieldLabel?.toLowerCase().replace(/\s+/g,"_") || `f_${Math.random().toString(36).slice(2,6)}`,
-                label: f.fieldLabel || "Feld",
-                type: f.fieldType === "textarea" ? "textarea" : f.fieldType === "dropdown" ? "select" : "text",
-                placeholder: f.placeholder || "",
+                key: f.fieldLabel?.toLowerCase().replace(/\s+/g,'_') || `f_${Math.random().toString(36).slice(2,6)}`,
+                label: f.fieldLabel || 'Feld',
+                type: f.fieldType === 'textarea' ? 'textarea' : f.fieldType === 'dropdown' ? 'select' : 'text',
+                placeholder: f.placeholder || '',
                 options: f.fieldOptions?.values?.map(o => o.option) || undefined
               }))
-            : [{ key:"data", label:"Eingabe", type:"textarea", placeholder:"" }]
+            : [{ key:'data', label:'Eingabe', type:'textarea', placeholder:'' }]
         });
         break;
       }
-      case "check": {
+      case 'check': {
         steps.push({
-          label: nodeName, type: "check", title: `Prüfung: ${nodeName}`,
+          label: nodeName, type: 'check', title: `Prüfung: ${nodeName}`,
           action: slugify(nodeName), loadingText: `${nodeName} läuft…`,
-          nextLabel: "Weiter", _conditions: extractConditions(params)
+          nextLabel: 'Weiter', _conditions: extractConditions(params)
         });
         break;
       }
-      case "ai": {
-        const lastEdit = steps.findLast(s => s.type === "edit");
+      case 'ai': {
+        const lastEdit = [...steps].reverse().find(s => s.type === 'edit');
         if (lastEdit && !lastEdit.improveAction) {
           lastEdit.improveAction = slugify(nodeName);
         } else {
           steps.push({
-            label: nodeName, type: "edit", title: nodeName,
-            action: slugify(nodeName), improveAction: slugify(nodeName) + "_improve",
+            label: nodeName, type: 'edit', title: nodeName,
+            action: slugify(nodeName), improveAction: slugify(nodeName) + '_improve',
             loadingText: `${nodeName} generiert…`,
             editLabel: extractEditLabel(params, nodeName),
-            instrPlaceholder: "Anweisungen zur Verbesserung…",
-            nextLabel: "Zur Freigabe",
-            _prompt: params.text || params.prompt || params.messages?.values?.[0]?.content || ""
+            instrPlaceholder: 'Anweisungen zur Verbesserung…',
+            nextLabel: 'Zur Freigabe',
+            _prompt: params.text || params.prompt || params.messages?.values?.[0]?.content || ''
           });
         }
         break;
       }
-      case "human": {
-        break;
-      }
-      case "action": {
+      case 'human': break;
+      case 'action': {
         steps.push({
-          label: nodeName, type: "review", title: `Freigabe: ${nodeName}`,
+          label: nodeName, type: 'review', title: `Freigabe: ${nodeName}`,
           action: slugify(nodeName), approveLabel: getApproveLabel(node),
-          doneTitle: "Abgeschlossen", doneText: `${nodeName} wurde ausgeführt.`
+          doneTitle: 'Abgeschlossen', doneText: `${nodeName} wurde ausgeführt.`
         });
         break;
       }
     }
   }
 
-  if (steps.length > 0 && steps[steps.length - 1].type !== "review") {
+  if (steps.length > 0 && steps[steps.length - 1].type !== 'review') {
     steps.push({
-      label: "Freigabe", type: "review", title: "Finale Prüfung",
-      action: "approve", approveLabel: "Freigeben",
-      doneTitle: "Abgeschlossen", doneText: "Workflow abgeschlossen."
+      label: 'Freigabe', type: 'review', title: 'Finale Prüfung',
+      action: 'approve', approveLabel: 'Freigeben',
+      doneTitle: 'Abgeschlossen', doneText: 'Workflow abgeschlossen.'
     });
   }
 
   const deduped = [];
   for (const s of steps) {
-    if (deduped.length > 0 && deduped[deduped.length-1].type === s.type && s.type === "review") continue;
+    if (deduped.length > 0 && deduped[deduped.length-1].type === s.type && s.type === 'review') continue;
     deduped.push(s);
   }
 
   return {
-    id: `n8n_${Date.now()}`,
-    name: wfName,
+    id: `n8n_${Date.now()}`, name: wfName,
     description: `Importiert aus n8n (${nodes.length} Nodes)`,
-    icon: "⚡", color: T.cy,
-    prefix: slugify(wfName),
-    steps: deduped,
-    webhookUrl,
-    nodeCount: nodes.length,
-    _raw: data
+    icon: '⚡', color: T.cy, prefix: slugify(wfName),
+    steps: deduped, webhookUrl, nodeCount: nodes.length, _raw: data
   };
 }
-
-function slugify(s) { return (s||"").toLowerCase().replace(/[^a-z0-9äöüß]+/g,"_").replace(/^_|_$/g,"").slice(0,40); }
-
-function extractConditions(params) {
-  const conds = params.conditions?.conditions || [];
-  return conds.map(c => `${c.leftValue || "?"} ${c.operation || "?"} ${c.rightValue || "?"}`);
-}
-
-function extractEditLabel(params, name) {
-  if (name.toLowerCase().includes("rewrite") || name.toLowerCase().includes("umschreib")) return "Umgeschriebener Text";
-  if (name.toLowerCase().includes("reply") || name.toLowerCase().includes("antwort")) return "Generierte Antwort";
-  return "Generierter Inhalt";
-}
-
-function getApproveLabel(node) {
-  const t = (node.type||"").toLowerCase();
-  const n = (node.name||"").toLowerCase();
-  if (t.includes("jira")) return "Nach Jira schreiben";
-  if (t.includes("slack")) return "An Slack senden";
-  if (t.includes("email") || t.includes("gmail")) return "E-Mail senden";
-  if (t.includes("notion")) return "In Notion speichern";
-  if (t.includes("googlesheets")) return "In Sheets schreiben";
-  if (n.includes("datev")) return "DATEV-Export";
-  return "Ausführen";
-}
-
 
 // ══════════════════════════════════════════
 //  DEMO WORKFLOWS
 // ══════════════════════════════════════════
 const DEMOS = [
   {
-    id:"jira-dor", name:"Jira DoR Review", description:"Tickets gegen Definition of Ready prüfen", icon:"🎯", color:"#818cf8", prefix:"jira_dor",
+    id:'jira-dor', name:'Jira DoR Review', description:'Tickets gegen Definition of Ready prüfen',
+    icon:'🎯', color:'#818cf8', prefix:'jira_dor',
     steps:[
-      { label:"Ticket laden", type:"input", title:"Jira Ticket-Key", actionLabel:"Laden", action:"load",
-        fields:[{key:"ticket_key",label:"Ticket-Key",type:"text",placeholder:"PROJ-1234"}] },
-      { label:"DoR prüfen", type:"check", title:"Definition of Ready", action:"check_dor", loadingText:"Wird geprüft…", nextLabel:"Umschreiben" },
-      { label:"Umschreiben", type:"edit", title:"Ticket umschreiben", action:"rewrite", improveAction:"improve",
-        editLabel:"Ticket-Text", instrPlaceholder:"Akzeptanzkriterien detaillierter…", nextLabel:"Freigabe" },
-      { label:"Freigabe", type:"review", title:"Finale Prüfung", action:"approve", approveLabel:"Nach Jira", doneTitle:"Freigegeben", doneText:"Zurückgeschrieben." }
+      { label:'Ticket laden', type:'input', title:'Jira Ticket-Key', actionLabel:'Laden', action:'load',
+        fields:[{key:'ticket_key',label:'Ticket-Key',type:'text',placeholder:'PROJ-1234'}] },
+      { label:'DoR prüfen', type:'check', title:'Definition of Ready', action:'check_dor', loadingText:'Wird geprüft…', nextLabel:'Umschreiben' },
+      { label:'Umschreiben', type:'edit', title:'Ticket umschreiben', action:'rewrite', improveAction:'improve',
+        editLabel:'Ticket-Text', instrPlaceholder:'Akzeptanzkriterien detaillierter…', nextLabel:'Freigabe' },
+      { label:'Freigabe', type:'review', title:'Finale Prüfung', action:'approve', approveLabel:'Nach Jira',
+        doneTitle:'Freigegeben', doneText:'Zurückgeschrieben.' }
     ],
     demo:{
-      form:{ticket_key:"PROJ-1234"},
-      ctx:{title:"REST API Registrierung",tags:[{text:"PROJ-1234",s:""},{text:"Story",s:"type"},{text:"High",s:"pri"}],
-        preview:"Als Benutzer möchte ich mich über die REST API registrieren.\nPOST /api/v1/users\nAkzeptanzkriterien: Endpoint erreichbar, Validierung, JWT"},
-      checks:[{c:"Story Format",s:"pass",d:"Vorhanden."},{c:"Akzeptanzkriterien",s:"warn",d:"Zu wenig Detail."},{c:"Abhängigkeiten",s:"fail",d:"Nicht dokumentiert."},{c:"Schätzung",s:"fail",d:"Fehlt."},{c:"Scope",s:"pass",d:"Klar."},{c:"Sicherheit",s:"fail",d:"Rate Limiting fehlt."}],
-      text:"User Story: REST API Registrierung\n\nAkzeptanzkriterien:\n✅ 201 bei gültigen Daten\n✅ 400 bei invalider E-Mail\n✅ 409 bei Duplikat\n✅ 429 Rate Limiting\n\nStory Points: 5"
+      form:{ ticket_key:'PROJ-1234' },
+      ctx:{
+        title:'REST API Registrierung',
+        tags:[{text:'PROJ-1234',s:''},{text:'Story',s:'type'},{text:'High',s:'pri'}],
+        preview:'Als Benutzer möchte ich mich über die REST API registrieren.\nPOST /api/v1/users\nAkzeptanzkriterien: Endpoint erreichbar, Validierung, JWT'
+      },
+      checks:[
+        {c:'Story Format',s:'pass',d:'Vorhanden.'},
+        {c:'Akzeptanzkriterien',s:'warn',d:'Zu wenig Detail.'},
+        {c:'Abhängigkeiten',s:'fail',d:'Nicht dokumentiert.'},
+        {c:'Schätzung',s:'fail',d:'Fehlt.'},
+        {c:'Scope',s:'pass',d:'Klar.'},
+        {c:'Sicherheit',s:'fail',d:'Rate Limiting fehlt.'}
+      ],
+      text:'User Story: REST API Registrierung\n\nAkzeptanzkriterien:\n✅ 201 bei gültigen Daten\n✅ 400 bei invalider E-Mail\n✅ 409 bei Duplikat\n✅ 429 Rate Limiting\n\nStory Points: 5'
     }
   }
 ];
-
 
 // ══════════════════════════════════════════
 //  VUE APP
@@ -709,7 +620,6 @@ const { createApp, ref, computed } = Vue;
 
 const app = createApp({
   setup() {
-    // ── State ──
     const workflows = ref([...DEMOS]);
     const wfIdx = ref(0);
     const view = ref('run');
@@ -728,71 +638,51 @@ const app = createApp({
     const importErr = ref('');
     const importPreview = ref(null);
 
-    // ── Computed ──
     const wf = computed(() => workflows.value[wfIdx.value] || DEMOS[0]);
-    const sd = computed(() => wf.value.steps?.[step.value] || {});
+    const sd = computed(() => (wf.value.steps || [])[step.value] || {});
 
-    // ── Helpers ──
-    const ts = () => new Date().toLocaleTimeString("de-DE", { hour:"2-digit", minute:"2-digit", second:"2-digit" });
-    const log = (m, ok = true) => { logs.value = [{ t: ts(), m, ok }, ...logs.value].slice(0, 30); };
+    const ts = () => new Date().toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    const log = (m, ok=true) => { logs.value = [{ t: ts(), m, ok }, ...logs.value].slice(0, 30); };
     const cnt = (s) => checks.value.filter(c => c.s === s).length;
     const delay = () => new Promise(r => setTimeout(r, 400 + Math.random() * 500));
 
-    const tagColor = (s) => {
-      const m = { "": T.ac, type: T.cy, pri: T.am };
-      return m[s] || T.ac;
+    const tagStyle = (s) => {
+      const c = { '': T.ac, type: T.cy, pri: T.am }[s] || T.ac;
+      return { background: c + '18', color: c };
     };
 
-    const chkStyle = (s) => {
-      const m = {
-        pass: { bg: T.gn + "18", c: T.gn, t: "✓" },
-        fail: { bg: T.rd + "18", c: T.rd, t: "✕" },
-        warn: { bg: T.am + "18", c: T.am, t: "!" }
-      };
-      return m[s] || m.warn;
-    };
-
-    // ── Webhook ──
     const callWH = async (action, payload = {}) => {
       const full = `${wf.value.prefix}_${action}`;
       if (!webhook.value) { log(`${full} (Demo)`); await delay(); return { demo: true }; }
       try {
         const r = await fetch(webhook.value, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: full, workflow: wf.value.id, step: step.value, ...payload })
         });
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const d = await r.json().catch(() => ({}));
         log(`${full} → ✓`);
         return d;
-      } catch (e) {
-        log(`${full} FEHLER: ${e.message}`, false);
-        return { demo: true };
-      }
+      } catch (e) { log(`${full} FEHLER: ${e.message}`, false); return { demo: true }; }
     };
 
-    // ── Navigation ──
     const reset = () => {
       step.value = 0; done.value = false;
       form.value = {}; ctx.value = {};
-      checks.value = []; text.value = '';
-      instr.value = '';
+      checks.value = []; text.value = ''; instr.value = '';
     };
 
-    const switchWf = (i) => {
-      wfIdx.value = i; reset(); view.value = 'run';
-    };
+    const switchWf = (i) => { wfIdx.value = i; reset(); view.value = 'run'; };
 
-    // ── Step Execution ──
     const execInput = async () => {
       loading.value = true;
       const d = await callWH(sd.value.action, { form: form.value });
-      if (d.demo && wf.value.demo) { ctx.value = wf.value.demo.ctx || {}; }
+      if (d.demo && wf.value.demo) ctx.value = wf.value.demo.ctx || {};
       else if (d.context) ctx.value = d.context;
       step.value++;
       const cs = wf.value.steps[step.value];
-      if (cs?.type === "check") {
+      if (cs?.type === 'check') {
         const d2 = await callWH(cs.action, { form: form.value, context: wf.value.demo?.ctx || ctx.value });
         if (d2.demo && wf.value.demo) checks.value = wf.value.demo.checks || [];
         else if (d2.check_results) checks.value = d2.check_results;
@@ -813,15 +703,15 @@ const app = createApp({
       loading.value = true;
       const es = wf.value.steps[step.value];
       const d = await callWH(es.action, { form: form.value, context: ctx.value, checks: checks.value });
-      if (d.demo && wf.value.demo) text.value = wf.value.demo.text || "";
+      if (d.demo && wf.value.demo) text.value = wf.value.demo.text || '';
       else if (d.text) text.value = d.text;
       loading.value = false;
     };
 
     const improve = async () => {
       loading.value = true;
-      const d = await callWH(sd.value.improveAction || "improve", { text: text.value, instructions: instr.value, context: ctx.value });
-      if (d.demo) text.value = text.value + "\n\n— Verbesserung —";
+      const d = await callWH(sd.value.improveAction || 'improve', { text: text.value, instructions: instr.value, context: ctx.value });
+      if (d.demo) text.value += '\n\n— Verbesserung —';
       else if (d.text) text.value = d.text;
       loading.value = false;
     };
@@ -829,44 +719,33 @@ const app = createApp({
     const approve = async () => {
       loading.value = true;
       await callWH(sd.value.action, { text: text.value, form: form.value, context: ctx.value });
-      done.value = true;
-      log("✓ Abgeschlossen");
+      done.value = true; log('✓ Abgeschlossen');
       loading.value = false;
     };
 
-    const loadDemo = () => {
-      if (wf.value.demo?.form) form.value = { ...wf.value.demo.form };
-    };
+    const loadDemo = () => { if (wf.value.demo?.form) form.value = { ...wf.value.demo.form }; };
 
     const goBackToEdit = () => {
-      const steps = wf.value.steps || [];
       for (let i = step.value - 1; i >= 0; i--) {
-        if (steps[i].type === "edit") { step.value = i; return; }
+        if (wf.value.steps[i].type === 'edit') { step.value = i; return; }
       }
       step.value--;
     };
 
-    // ── Import ──
     const handleImport = () => {
-      importErr.value = "";
-      try {
-        const parsed = parseN8nWorkflow(importJson.value);
-        importPreview.value = parsed;
-      } catch (e) {
-        importErr.value = e.message;
-        importPreview.value = null;
-      }
+      importErr.value = '';
+      try { importPreview.value = parseN8nWorkflow(importJson.value); }
+      catch (e) { importErr.value = e.message; importPreview.value = null; }
     };
 
     const confirmImport = () => {
       if (!importPreview.value) return;
+      const name = importPreview.value.name;
       workflows.value.push(importPreview.value);
       wfIdx.value = workflows.value.length - 1;
-      reset();
-      view.value = 'run';
-      importJson.value = '';
-      importPreview.value = null;
-      log(`Workflow "${workflows.value[wfIdx.value].name}" importiert ✓`);
+      reset(); view.value = 'run';
+      importJson.value = ''; importPreview.value = null;
+      log(`Workflow "${name}" importiert ✓`);
     };
 
     const handleFile = (e) => {
@@ -878,15 +757,11 @@ const app = createApp({
     };
 
     return {
-      workflows, wfIdx, view, step, loading, done,
-      form, ctx, checks, text, instr, logs,
+      workflows, wfIdx, view, step, loading, done, form, ctx, checks, text, instr, logs,
       webhook, showCfg, importJson, importErr, importPreview,
       wf, sd,
-      tagColor, chkStyle, cnt,
-      switchWf, reset, loadDemo,
-      execInput, execCheck, goEdit, improve, approve, goBackToEdit,
-      handleImport, confirmImport, handleFile,
-      JSON
+      cnt, tagStyle, switchWf, reset, execInput, execCheck, goEdit, improve, approve,
+      loadDemo, goBackToEdit, handleImport, confirmImport, handleFile
     };
   }
 });

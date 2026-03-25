@@ -69,4 +69,5 @@ The application is a single-page app powered by:
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
-Copyright (c) 2026 ADAPTIVE INTELLIGENCE (G3NUI)
+
+Copyright (c) 2026 [ADAPTIVE INTELLIGENCE](https://adaptive.de) (G3NUI)
