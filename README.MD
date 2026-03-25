@@ -40,8 +40,6 @@ To connect g3nui back to your n8n instance:
 
 ```
 index.html          — Full application (Vue 3 SPA, single file)
-TESTSAMPLE/
-  g3nui.jsx         — React/JSX reference implementation
 ```
 
 The application is a single-page app powered by:
