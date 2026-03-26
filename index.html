@@ -246,11 +246,24 @@ body { margin:0 }
           </div>
           <div class="flex gap-2">
             <button v-if="step > 0" @click="reset" class="btn-ghost"><span v-icon="'rotate-ccw'" style="display:inline-flex"></span> Neustart</button>
+            <button @click="activeSession.seqView = !activeSession.seqView"
+                    class="btn-ghost text-[11px]"
+                    :class="activeSession.seqView ? 'text-g-ac' : ''">
+              <span v-icon="activeSession.seqView ? 'rows-3' : 'square'" data-size="13" style="display:inline-flex"></span>
+            </button>
+            <button @click="activeSession.showDebug = !activeSession.showDebug"
+                    class="btn-ghost text-[11px]"
+                    :class="activeSession.showDebug ? 'text-g-am' : ''">
+              <span v-icon="'bug'" style="display:inline-flex"></span> Debug
+            </button>
             <button @click="activeSession.view = 'inspect'" class="btn-ghost text-[11px]"><span v-icon="'braces'" style="display:inline-flex"></span> JSON</button>
           </div>
         </div>
 
         <div class="px-7 py-6">
+
+          <!-- ════════ CLASSIC VIEW (Single Card) ════════ -->
+          <template v-if="!activeSession.seqView">
           <!-- Stepper -->
           <div class="flex items-center mb-6 overflow-x-auto pb-1">
             <template v-for="(s, i) in (wf.steps||[])" :key="i">
@@ -277,6 +290,7 @@ body { margin:0 }
             <template v-if="sd.type === 'input'">
               <div class="p-[22px]">
                 <div class="sec-label">{{ sd.title }}</div>
+                <p v-if="!(sd.fields || []).length" class="text-[13px] text-g-tx2 mb-1">Klicke auf <b>{{ sd.actionLabel || 'Weiter' }}</b> um diesen Schritt auszuführen.</p>
                 <div v-for="f in (sd.fields || [])" :key="f.key" class="mb-3">
                   <label class="block text-[10px] font-bold uppercase tracking-wide text-g-tx3 mb-1">{{ f.label }}</label>
                   <input v-if="f.type === 'text'" v-model="form[f.key]" @keydown.enter="execInput"
@@ -418,6 +432,156 @@ body { margin:0 }
             </template>
 
           </div>
+          </template><!-- /classic view -->
+
+          <!-- ════════ SEQUENCE VIEW (All steps top-to-bottom) ════════ -->
+          <template v-else>
+          <div v-for="(sq, si) in (wf.steps||[])" :key="'seq'+si" class="relative">
+            <!-- Connector line -->
+            <div v-if="si > 0" class="flex justify-center" style="height:20px">
+              <div class="w-0.5 h-full" :class="step > si - 1 ? 'bg-g-gn/30' : 'bg-g-bd'"></div>
+            </div>
+
+            <!-- Step card -->
+            <div class="rounded-xl border overflow-hidden transition-all"
+                 :class="step > si ? 'bg-g-sf/50 border-g-gn/20' : step === si ? 'bg-g-sf border-g-ac/40' : 'bg-g-sf/30 border-g-bd/50'">
+
+              <!-- Step header (always visible) -->
+              <div class="px-4 py-2.5 flex items-center gap-2.5">
+                <span class="w-[22px] h-[22px] rounded-full flex items-center justify-center text-[10px] font-bold border-2 flex-shrink-0"
+                      :class="step > si ? 'border-g-gn bg-g-gn text-g-bg' : step === si ? 'border-g-ac bg-g-ac text-g-bg' : 'border-g-bd bg-g-sf text-g-tx3'">
+                  <span v-if="step > si" v-icon="'check'" data-size="11" style="display:inline-flex"></span>
+                  <template v-else>{{ si + 1 }}</template>
+                </span>
+                <span class="text-xs font-semibold" :class="step > si ? 'text-g-gn' : step === si ? 'text-g-tx' : 'text-g-tx3'">{{ sq.label }}</span>
+                <span class="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded font-bold"
+                      :class="sq.type==='input'?'text-g-ac bg-g-ac/10':sq.type==='check'?'text-g-am bg-g-am/10':sq.type==='edit'?'text-g-cy bg-g-cy/10':'text-g-gn bg-g-gn/10'">
+                  {{ sq.type==='input'?'Eingabe':sq.type==='check'?'Prüfung':sq.type==='edit'?'Bearbeiten':'Freigabe' }}
+                </span>
+                <span v-if="step > si" class="ml-auto text-[10px] text-g-gn font-medium">erledigt</span>
+                <span v-else-if="step === si && loading" class="ml-auto spinner" style="width:14px;height:14px"></span>
+              </div>
+
+              <!-- Completed step: compact summary -->
+              <div v-if="step > si" class="px-4 pb-3 text-xs text-g-tx2">
+                <template v-if="sq.type === 'input' && (sq.fields||[]).length">
+                  <span v-for="f in sq.fields" :key="f.key" class="mr-3"><b class="text-g-tx3">{{ f.label }}:</b> {{ form[f.key] || '–' }}</span>
+                </template>
+                <template v-else-if="sq.type === 'check' && checks.length">{{ cnt('pass') }} OK · {{ cnt('warn') }} Warn · {{ cnt('fail') }} Fail</template>
+                <template v-else-if="sq.type === 'edit' && text">{{ text.slice(0,80) }}{{ text.length > 80 ? '…' : '' }}</template>
+                <template v-else-if="sq.type === 'review' && done">Freigegeben</template>
+              </div>
+
+              <!-- Current step: full interactive content -->
+              <template v-if="step === si">
+
+                <!-- INPUT -->
+                <template v-if="sq.type === 'input'">
+                  <div class="px-4 pb-2" v-if="!(sq.fields||[]).length">
+                    <p class="text-[13px] text-g-tx2">Klicke auf <b>{{ sq.actionLabel || 'Weiter' }}</b> um fortzufahren.</p>
+                  </div>
+                  <div class="px-4 pb-1" v-for="f in (sq.fields || [])" :key="f.key">
+                    <label class="block text-[10px] font-bold uppercase tracking-wide text-g-tx3 mb-1">{{ f.label }}</label>
+                    <input v-if="f.type === 'text'" v-model="form[f.key]" @keydown.enter="execInput" :placeholder="f.placeholder || ''"
+                           class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2 text-xs text-g-tx font-mono outline-none mb-2" />
+                    <textarea v-else-if="f.type === 'textarea'" v-model="form[f.key]" :placeholder="f.placeholder || ''" rows="2"
+                              class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2 text-xs text-g-tx outline-none resize-y mb-2"></textarea>
+                    <select v-else-if="f.type === 'select'" v-model="form[f.key]"
+                            class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2 text-xs text-g-tx cursor-pointer outline-none mb-2">
+                      <option v-for="o in (f.options || [])" :key="o" :value="o">{{ o }}</option>
+                    </select>
+                  </div>
+                  <div class="px-4 py-2.5 flex justify-end gap-2">
+                    <button v-if="wf.demo" @click="loadDemo" class="btn-ghost text-[11px]">Demo</button>
+                    <button @click="execInput" :disabled="loading" class="btn-pri text-[11px]" :class="{'opacity-40':loading}">
+                      <span v-if="loading" class="spinner"></span>
+                      <template v-else>{{ sq.actionLabel || 'Weiter' }} <span v-icon="'arrow-right'" style="display:inline-flex"></span></template>
+                    </button>
+                  </div>
+                </template>
+
+                <!-- CHECK -->
+                <template v-if="sq.type === 'check'">
+                  <div class="px-4 pb-3">
+                    <div v-if="ctx.tags" class="mb-2">
+                      <span v-for="(t, ti) in ctx.tags" :key="ti" class="font-mono text-[10.5px] font-medium py-[3px] px-[9px] rounded-full mr-1.5 inline-block" :style="tagStyle(t.s)">{{ t.text }}</span>
+                    </div>
+                    <div v-if="ctx.title" class="text-sm font-bold mb-1">{{ ctx.title }}</div>
+                    <div v-if="ctx.preview" class="text-[12px] text-g-tx2 leading-6 whitespace-pre-wrap mb-3">{{ ctx.preview }}</div>
+                    <div v-if="loading" class="text-center py-5 text-g-tx3"><span class="spinner spinner-lg"></span></div>
+                    <template v-else-if="checks.length > 0">
+                      <div v-for="(item, ci) in checks" :key="ci" class="flex items-start gap-2.5 py-1.5" :class="ci < checks.length - 1 ? 'border-b border-g-bd' : ''">
+                        <span class="w-4 h-4 rounded-full flex items-center justify-center text-[9px] flex-shrink-0 mt-0.5"
+                              :class="item.s==='pass'?'bg-g-gn/10 text-g-gn':item.s==='fail'?'bg-g-rd/10 text-g-rd':'bg-g-am/10 text-g-am'">
+                          <span v-icon="item.s==='pass'?'check':item.s==='fail'?'x':'alert-triangle'" data-size="9" style="display:inline-flex"></span>
+                        </span>
+                        <div><div class="text-xs font-medium">{{ item.c }}</div><div class="text-[10.5px] text-g-tx2">{{ item.d }}</div></div>
+                      </div>
+                    </template>
+                  </div>
+                  <div v-if="!loading && checks.length" class="px-4 py-2.5 flex justify-between gap-2">
+                    <button @click="execCheck" class="btn-warn text-[11px]"><span v-icon="'refresh-cw'" style="display:inline-flex"></span> Nochmal</button>
+                    <button @click="goEdit" class="btn-pri text-[11px]">{{ sq.nextLabel || 'Weiter' }} <span v-icon="'arrow-right'" style="display:inline-flex"></span></button>
+                  </div>
+                </template>
+
+                <!-- EDIT -->
+                <template v-if="sq.type === 'edit'">
+                  <div class="px-4 pb-3">
+                    <div v-if="loading" class="text-center py-5 text-g-tx3"><span class="spinner spinner-lg"></span></div>
+                    <template v-else>
+                      <div class="mb-2">
+                        <label class="block text-[10px] font-bold uppercase tracking-wide text-g-tx3 mb-1">Anweisungen</label>
+                        <textarea v-model="instr" :placeholder="sq.instrPlaceholder || 'Korrekturhinweise…'" rows="1"
+                                  class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2 text-xs text-g-tx outline-none resize-y"></textarea>
+                      </div>
+                      <label class="block text-[10px] font-bold uppercase tracking-wide text-g-tx3 mb-1">{{ sq.editLabel || 'Inhalt' }}</label>
+                      <textarea v-model="text" rows="6"
+                                class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2 text-[12px] text-g-tx outline-none resize-y leading-6"
+                                style="min-height:120px"></textarea>
+                    </template>
+                  </div>
+                  <div v-if="!loading" class="px-4 py-2.5 flex justify-between gap-2">
+                    <button @click="improve" :disabled="loading" class="btn-warn text-[11px]"><span v-icon="'sparkles'" style="display:inline-flex"></span> Verbessern</button>
+                    <button @click="step++" class="btn-pri text-[11px]">{{ sq.nextLabel || 'Freigabe' }} <span v-icon="'arrow-right'" style="display:inline-flex"></span></button>
+                  </div>
+                </template>
+
+                <!-- REVIEW -->
+                <template v-if="sq.type === 'review'">
+                  <div class="px-4 pb-3">
+                    <template v-if="!done">
+                      <div v-if="ctx.tags" class="mb-2">
+                        <span v-for="(t, ti) in ctx.tags" :key="ti" class="font-mono text-[10.5px] font-medium py-[3px] px-[9px] rounded-full mr-1.5 inline-block" :style="tagStyle(t.s)">{{ t.text }}</span>
+                      </div>
+                      <div class="bg-g-bg border border-g-bd rounded-lg p-3">
+                        <pre class="font-sans text-[12px] text-g-tx whitespace-pre-wrap leading-6 m-0">{{ text || '(Kein Inhalt)' }}</pre>
+                      </div>
+                    </template>
+                    <template v-else>
+                      <div class="text-center py-5">
+                        <div class="mb-2 text-g-gn flex justify-center"><span v-icon="'circle-check'" data-size="30" style="display:inline-flex"></span></div>
+                        <h3 class="text-sm font-bold">{{ sq.doneTitle || 'Abgeschlossen' }}</h3>
+                        <p class="text-g-tx2 text-xs">{{ sq.doneText || 'Workflow abgeschlossen.' }}</p>
+                      </div>
+                    </template>
+                  </div>
+                  <div v-if="!done" class="px-4 py-2.5 flex justify-between gap-2">
+                    <button @click="goBackToEdit" class="btn-warn text-[11px]"><span v-icon="'refresh-cw'" style="display:inline-flex"></span> Nochmal</button>
+                    <button @click="approve" :disabled="loading" class="btn-ok text-[11px]" :class="{'opacity-40':loading}">
+                      <span v-if="loading" class="spinner"></span>
+                      <template v-else><span v-icon="'check'" style="display:inline-flex"></span> {{ sq.approveLabel || 'Freigeben' }}</template>
+                    </button>
+                  </div>
+                  <div v-else class="px-4 py-2.5 flex justify-center">
+                    <button @click="reset" class="btn-sec text-[11px]">Neuen Durchlauf</button>
+                  </div>
+                </template>
+
+              </template>
+            </div>
+          </div>
+          </template><!-- /sequence view -->
 
           <!-- Log -->
           <div v-if="logs.length > 0" class="mt-5">
@@ -427,6 +591,40 @@ body { margin:0 }
                  :class="li < logs.length - 1 ? 'border-b border-g-bd/15' : ''">
               <span>{{ l.t }}</span>
               <span :class="l.ok ? 'text-g-gn' : 'text-g-rd'">{{ l.m }}</span>
+            </div>
+          </div>
+
+          <!-- Debug Panel -->
+          <div v-if="activeSession.showDebug && activeSession.debug.length > 0" class="mt-5">
+            <div class="sec-label flex items-center gap-2">
+              <span v-icon="'bug'" data-size="11" style="display:inline-flex"></span> Debug
+              <span class="text-g-tx3 font-normal normal-case tracking-normal">({{ activeSession.debug.length }} Calls)</span>
+            </div>
+            <div class="bg-g-bg border border-g-bd rounded-lg overflow-hidden">
+              <div v-for="(entry, di) in [...activeSession.debug].reverse()" :key="di"
+                   class="border-b border-g-bd last:border-b-0">
+                <button @click="entry._open = !entry._open"
+                        class="w-full px-3 py-2 flex items-center gap-2 text-left bg-transparent border-none cursor-pointer transition-colors hover:bg-g-sf/50"
+                        style="font-family:inherit">
+                  <span class="font-mono text-[10px] text-g-tx3 flex-shrink-0">{{ entry.t }}</span>
+                  <span class="font-mono text-[10px] text-g-am flex-shrink-0">Step {{ entry.step }}</span>
+                  <span class="font-mono text-[11px] text-g-tx truncate flex-1">{{ entry.action }}</span>
+                  <span v-if="entry.err" class="text-[9px] font-bold text-g-rd">ERR</span>
+                  <span v-else class="text-[9px] font-bold text-g-gn">OK</span>
+                  <span v-icon="entry._open ? 'chevron-up' : 'chevron-down'" data-size="12" style="display:inline-flex" class="text-g-tx3"></span>
+                </button>
+                <div v-if="entry._open" class="px-3 pb-3">
+                  <div class="mb-2">
+                    <div class="text-[9px] font-bold uppercase tracking-wide text-g-tx3 mb-1">Request</div>
+                    <pre class="bg-g-sf rounded-md px-2.5 py-2 text-[10.5px] text-g-tx font-mono whitespace-pre-wrap leading-5 m-0 overflow-auto" style="max-height:200px">{{ JSON.stringify(entry.req, null, 2) }}</pre>
+                  </div>
+                  <div>
+                    <div class="text-[9px] font-bold uppercase tracking-wide mb-1" :class="entry.err ? 'text-g-rd' : 'text-g-tx3'">{{ entry.err ? 'Error' : 'Response' }}</div>
+                    <pre v-if="entry.err" class="bg-g-sf rounded-md px-2.5 py-2 text-[10.5px] text-g-rd font-mono whitespace-pre-wrap leading-5 m-0">{{ entry.err }}</pre>
+                    <pre v-else class="bg-g-sf rounded-md px-2.5 py-2 text-[10.5px] text-g-tx font-mono whitespace-pre-wrap leading-5 m-0 overflow-auto" style="max-height:300px">{{ JSON.stringify(entry.res, null, 2) }}</pre>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -652,10 +850,11 @@ function parseN8nWorkflow(json) {
             }))
           });
         } else {
+          // Simple trigger (Execute Workflow, Manual, etc.) — no input fields, just a start button
           steps.push({
-            label: nodeName, type: 'input', title: `${nodeName} — Daten eingeben`,
+            label: nodeName, type: 'input', title: nodeName,
             actionLabel: 'Starten', action: slugify(nodeName),
-            fields: [{ key: 'input_data', label: 'Eingabe', type: 'textarea', placeholder: 'Daten eingeben oder einfügen…' }]
+            fields: []
           });
         }
         break;
@@ -785,7 +984,8 @@ function createSession(wfIdx, data) {
     id: data?.id || ++_sessId, wfIdx, view: data?.view || 'run', step: data?.step || 0,
     loading: false, done: data?.done || false,
     form: data?.form || {}, ctx: data?.ctx || {}, checks: data?.checks || [],
-    text: data?.text || '', instr: data?.instr || '', logs: data?.logs || []
+    text: data?.text || '', instr: data?.instr || '', logs: data?.logs || [],
+    debug: data?.debug || [], showDebug: false, seqView: data?.seqView ?? false
   });
   if (s.id > _sessId) _sessId = s.id;
   return s;
@@ -799,7 +999,8 @@ function saveState(workflows, sessions, activeTab, webhook) {
     });
     const sessData = sessions.value.map(s => ({
       id: s.id, wfIdx: s.wfIdx, view: s.view, step: s.step, done: s.done,
-      form: s.form, ctx: s.ctx, checks: s.checks, text: s.text, instr: s.instr, logs: s.logs
+      form: s.form, ctx: s.ctx, checks: s.checks, text: s.text, instr: s.instr, logs: s.logs,
+      debug: s.debug, seqView: s.seqView
     }));
     localStorage.setItem(STORE_KEY, JSON.stringify({
       imported, sessions: sessData, activeTab: activeTab.value, webhook: webhook.value
@@ -899,20 +1100,37 @@ const app = createApp({
       return { background: c + '18', color: c };
     };
 
+    const _pushDebug = (action, req, res, err) => {
+      const s = activeSession.value; if (!s) return;
+      const ts_ = new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      s.debug = [...s.debug, { t: ts_, step: s.step, action, req, res, err: err || null }];
+    };
+
     const callWH = async (action, payload = {}) => {
       const full = `${wf.value.prefix}_${action}`;
-      if (!webhook.value) { log(`${full} (Demo)`); await delay(); return { demo: true }; }
+      const reqBody = { action: full, workflow: wf.value.id, step: step.value, ...payload };
+      if (!webhook.value) {
+        log(`${full} (Demo)`); await delay();
+        const demoRes = { demo: true };
+        _pushDebug(full, reqBody, demoRes);
+        return demoRes;
+      }
       try {
         const r = await fetch(webhook.value, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: full, workflow: wf.value.id, step: step.value, ...payload })
+          body: JSON.stringify(reqBody)
         });
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const d = await r.json().catch(() => ({}));
         log(`${full} → ✓`);
+        _pushDebug(full, reqBody, d);
         return d;
-      } catch (e) { log(`${full} FEHLER: ${e.message}`, false); return { demo: true }; }
+      } catch (e) {
+        log(`${full} FEHLER: ${e.message}`, false);
+        _pushDebug(full, reqBody, null, e.message);
+        return { demo: true };
+      }
     };
 
     // Session management
@@ -939,6 +1157,7 @@ const app = createApp({
       s.step = 0; s.done = false;
       s.form = {}; s.ctx = {};
       s.checks = []; s.text = ''; s.instr = '';
+      s.debug = [];
     };
 
     const execInput = async () => {
