@@ -769,12 +769,44 @@ body { margin:0 }
         <!-- Steps -->
         <div class="bg-g-sf border border-g-bd rounded-lg p-4 mb-4">
           <h3 class="text-xs font-bold uppercase tracking-wide text-g-tx3 mb-3">Schritte ({{ (wf.steps||[]).length }})</h3>
-          <div v-for="(st, si) in (wf.steps||[])" :key="si" class="flex items-center gap-2 py-1.5 border-b border-g-bd last:border-0">
-            <span class="text-[10px] font-mono text-g-tx3 w-5 text-right">{{ si + 1 }}</span>
-            <span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded"
-                  :class="st.type==='input'?'bg-green-900/30 text-g-gn':st.type==='check'?'bg-amber-900/30 text-g-am':st.type==='edit'?'bg-blue-900/30 text-g-ac':'bg-red-900/30 text-g-rd'">{{ st.type }}</span>
-            <span class="text-xs text-g-tx flex-1">{{ st.label }}</span>
-            <span class="text-[10px] font-mono text-g-tx3">{{ st.action }}</span>
+          <div v-for="(st, si) in (wf.steps||[])" :key="si" class="border-b border-g-bd last:border-0 py-2.5">
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-mono text-g-tx3 w-5 text-right">{{ si + 1 }}</span>
+              <span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded"
+                    :class="st.type==='input'?'bg-green-900/30 text-g-gn':st.type==='check'?'bg-amber-900/30 text-g-am':st.type==='edit'?'bg-blue-900/30 text-g-ac':'bg-red-900/30 text-g-rd'">{{ st.type }}</span>
+              <input :value="st.label" @input="st.label = $event.target.value"
+                     class="text-xs text-g-tx flex-1 bg-transparent border-none outline-none px-1" />
+              <span class="text-[10px] font-mono text-g-tx3">{{ st.action }}</span>
+              <button v-if="st.type==='input'" @click="st._editFields = !st._editFields"
+                      class="text-[10px] text-g-ac hover:text-g-ac2 bg-transparent border-none cursor-pointer px-1">
+                {{ (st.fields||[]).length }} Felder <span v-icon="st._editFields?'chevron-up':'chevron-down'" data-size="10" style="display:inline-flex"></span>
+              </button>
+            </div>
+            <!-- Field Editor for input steps -->
+            <div v-if="st.type==='input' && st._editFields" class="mt-2 ml-7 space-y-2">
+              <div v-for="(f, fi) in (st.fields||[])" :key="fi"
+                   class="flex items-center gap-1.5 bg-g-bg rounded-lg px-2.5 py-1.5 border border-g-bd/50">
+                <input :value="f.key" @input="f.key = $event.target.value" placeholder="key"
+                       class="w-24 text-[10px] font-mono text-g-tx bg-transparent border-none outline-none" />
+                <input :value="f.label" @input="f.label = $event.target.value" placeholder="Label"
+                       class="flex-1 text-[10px] text-g-tx bg-transparent border-none outline-none" />
+                <select :value="f.type||'text'" @change="f.type = $event.target.value"
+                        class="text-[10px] text-g-tx3 bg-transparent border-none outline-none w-16">
+                  <option value="text">text</option><option value="textarea">textarea</option><option value="select">select</option>
+                </select>
+                <input :value="f.placeholder||''" @input="f.placeholder = $event.target.value" placeholder="Placeholder"
+                       class="w-28 text-[10px] text-g-tx3 bg-transparent border-none outline-none" />
+                <button @click="st.fields.splice(fi, 1)"
+                        class="text-g-tx3 hover:text-g-rd bg-transparent border-none cursor-pointer p-0.5">
+                  <span v-icon="'x'" data-size="11" style="display:inline-flex"></span>
+                </button>
+              </div>
+              <button @click="addField(st)"
+                      class="text-[10px] text-g-ac hover:text-g-ac2 bg-transparent border border-dashed border-g-ac/30 rounded-lg px-2.5 py-1 cursor-pointer w-full">
+                + Feld hinzufügen
+              </button>
+              <p class="text-[10px] text-g-tx3 opacity-60">In n8n verfügbar als: <code class="text-g-am" v-text="'{{ $json.body.form.' + ((st.fields||[])[0]?.key || 'feld_name') + ' }}'"></code></p>
+            </div>
           </div>
         </div>
 
@@ -1434,6 +1466,11 @@ const app = createApp({
       connTest.loading = false;
     };
 
+    const addField = (st) => {
+      if (!st.fields) st.fields = [];
+      st.fields.push({ key: 'feld_' + (st.fields.length + 1), label: 'Neues Feld', type: 'text', placeholder: '' });
+    };
+
     // Session management
     const newSession = (wfIdx) => {
       const sess = createSession(wfIdx);
@@ -1585,7 +1622,7 @@ const app = createApp({
       webhook, corsProxy, webhookMethod, showCfg, connTest, testConnection,
       importJson, importErr, importPreview, currentTheme, themes, applyTheme,
       wf, sd,
-      cnt, tagStyle, newSession, closeSession, deleteWorkflow, toggleImport, reset,
+      cnt, tagStyle, addField, newSession, closeSession, deleteWorkflow, toggleImport, reset,
       execInput, execCheck, goEdit, improve, approve,
       loadDemo, goBackToEdit, handleImport, confirmImport, handleFile
     };
