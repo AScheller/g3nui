@@ -972,6 +972,7 @@ function parseN8nWorkflow(json) {
     const t = (n.type || '').toLowerCase();
     const name = (n.name || '').toLowerCase();
     if (t.includes('respondtowebhook') || t.includes('respond-to-webhook') || name.includes('respond to webhook')) return 'util';
+    if (t.includes('manualtrigger') || t.includes('manual-trigger') || t.includes('executeworkflowtrigger') || t.includes('scheduletrigger')) return 'util';
     if (t.includes('webhook') || t.includes('trigger') || t.includes('formtrigger') || t.includes('form-trigger')) return 'trigger';
     if (t.includes('form') || t.includes('n8n-nodes-base.form')) return 'input';
     if (t.includes('if') || t.includes('switch') || t.includes('compare') || t.includes('filter')) return 'check';
@@ -1029,14 +1030,8 @@ function parseN8nWorkflow(json) {
               options: f.fieldOptions?.values?.map(o => o.option) || undefined
             }))
           });
-        } else {
-          // Simple trigger (Execute Workflow, Manual, etc.) — no input fields, just a start button
-          steps.push({
-            label: nodeName, type: 'input', title: nodeName,
-            actionLabel: 'Starten', action: slugify(nodeName),
-            fields: []
-          });
         }
+        // If no form fields, don't create a step — trigger is handled implicitly
         break;
       }
       case 'input': {
