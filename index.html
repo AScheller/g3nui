@@ -393,11 +393,47 @@ body { margin:0 }
                   <textarea v-model="text" rows="10"
                             class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2.5 text-[13px] text-g-tx outline-none resize-y leading-7 transition-colors"
                             style="min-height:180px"></textarea>
+                  <!-- Inline DoR Re-Check -->
+                  <div v-if="activeSession._dorChecking" class="mt-3 text-center py-4 text-g-tx3">
+                    <span class="spinner spinner-lg"></span>
+                    <p class="mt-2 text-[13px]">DoR wird geprüft…</p>
+                  </div>
+                  <div v-if="activeSession._dorResults && activeSession._dorResults.length > 0 && !activeSession._dorChecking" class="mt-3 bg-g-bg border border-g-bd rounded-lg overflow-hidden">
+                    <div class="px-3 py-2 border-b border-g-bd flex items-center justify-between">
+                      <span class="text-[10px] font-bold uppercase tracking-wide text-g-tx3">DoR Ergebnis</span>
+                      <button @click="activeSession._dorResults = null" class="text-g-tx3 hover:text-g-tx2 bg-transparent border-none cursor-pointer p-0"><span v-icon="'x'" data-size="12" style="display:inline-flex"></span></button>
+                    </div>
+                    <div class="px-3 py-2">
+                      <div v-for="(item, ci) in activeSession._dorResults" :key="ci"
+                           class="flex items-start gap-2.5 py-2"
+                           :class="ci < activeSession._dorResults.length - 1 ? 'border-b border-g-bd' : ''">
+                        <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] flex-shrink-0"
+                              :class="item.s==='pass'?'bg-g-gn/10 text-g-gn':item.s==='fail'?'bg-g-rd/10 text-g-rd':'bg-g-am/10 text-g-am'">
+                          <span v-icon="item.s==='pass'?'check':item.s==='fail'?'x':'alert-triangle'" data-size="11" style="display:inline-flex"></span>
+                        </span>
+                        <div>
+                          <div class="text-[13px] font-medium">{{ item.c }}</div>
+                          <div class="text-xs text-g-tx2 mt-0.5">{{ item.d }}</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="flex gap-3.5 px-3 pb-3">
+                      <div v-for="[s, cls, l] in [['pass','text-g-gn','Erfüllt'],['warn','text-g-am','Teilweise'],['fail','text-g-rd','Fehlt']]"
+                           :key="s" class="text-center flex-1 bg-g-sf rounded-lg py-2">
+                        <div class="text-lg font-bold" :class="cls">{{ activeSession._dorResults.filter(c => c.s === s).length }}</div>
+                        <div class="text-[9px] uppercase tracking-wide text-g-tx3">{{ l }}</div>
+                      </div>
+                    </div>
+                  </div>
                 </template>
               </div>
               <div v-if="!loading" class="px-[22px] py-3 bg-g-bg2 border-t border-g-bd flex justify-between flex-wrap gap-2">
                 <button @click="step--" class="btn-sec"><span v-icon="'arrow-left'" style="display:inline-flex"></span> Zurück</button>
                 <div class="flex gap-2">
+                  <button @click="recheckDor" :disabled="activeSession._dorChecking" class="btn-sec">
+                    <span v-if="activeSession._dorChecking" class="spinner"></span>
+                    <template v-else><span v-icon="'search'" style="display:inline-flex"></span> DoR prüfen</template>
+                  </button>
                   <button @click="improve" :disabled="loading" class="btn-warn"><span v-icon="'sparkles'" style="display:inline-flex"></span> Verbessern</button>
                   <button @click="step++" class="btn-pri">{{ sd.nextLabel || 'Freigabe' }} <span v-icon="'arrow-right'" style="display:inline-flex"></span></button>
                 </div>
@@ -414,6 +450,8 @@ body { margin:0 }
                           class="font-mono text-[10.5px] font-medium py-[3px] px-[9px] rounded-full mr-1.5 inline-block"
                           :style="tagStyle(t.s)">{{ t.text }}</span>
                   </div>
+                  <div v-if="ctx.title" class="text-[15px] font-bold mb-2">{{ ctx.title }}</div>
+                  <div v-if="ctx.preview" class="text-[13px] text-g-tx2 leading-7 whitespace-pre-wrap mb-4">{{ ctx.preview }}</div>
                   <!-- Table Data -->
                   <div v-if="activeSession.tableData" class="mb-3">
                     <div class="flex items-center justify-between mb-2">
@@ -579,11 +617,41 @@ body { margin:0 }
                       <textarea v-model="text" rows="6"
                                 class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2 text-[12px] text-g-tx outline-none resize-y leading-6"
                                 style="min-height:120px"></textarea>
+                      <!-- Inline DoR Re-Check -->
+                      <div v-if="activeSession._dorChecking" class="mt-2 text-center py-3 text-g-tx3"><span class="spinner"></span></div>
+                      <div v-if="activeSession._dorResults && activeSession._dorResults.length > 0 && !activeSession._dorChecking" class="mt-2 bg-g-bg border border-g-bd rounded-lg overflow-hidden">
+                        <div class="px-3 py-1.5 border-b border-g-bd flex items-center justify-between">
+                          <span class="text-[9px] font-bold uppercase tracking-wide text-g-tx3">DoR Ergebnis</span>
+                          <button @click="activeSession._dorResults = null" class="text-g-tx3 hover:text-g-tx2 bg-transparent border-none cursor-pointer p-0"><span v-icon="'x'" data-size="11" style="display:inline-flex"></span></button>
+                        </div>
+                        <div class="px-3 py-1.5">
+                          <div v-for="(item, ci) in activeSession._dorResults" :key="ci" class="flex items-start gap-2 py-1.5" :class="ci < activeSession._dorResults.length - 1 ? 'border-b border-g-bd' : ''">
+                            <span class="w-4 h-4 rounded-full flex items-center justify-center text-[9px] flex-shrink-0 mt-0.5"
+                                  :class="item.s==='pass'?'bg-g-gn/10 text-g-gn':item.s==='fail'?'bg-g-rd/10 text-g-rd':'bg-g-am/10 text-g-am'">
+                              <span v-icon="item.s==='pass'?'check':item.s==='fail'?'x':'alert-triangle'" data-size="9" style="display:inline-flex"></span>
+                            </span>
+                            <div><div class="text-xs font-medium">{{ item.c }}</div><div class="text-[10.5px] text-g-tx2">{{ item.d }}</div></div>
+                          </div>
+                        </div>
+                        <div class="flex gap-2 px-3 pb-2">
+                          <div v-for="[s, cls, l] in [['pass','text-g-gn','OK'],['warn','text-g-am','Warn'],['fail','text-g-rd','Fail']]"
+                               :key="s" class="text-center flex-1 bg-g-sf rounded py-1">
+                            <span class="text-sm font-bold" :class="cls">{{ activeSession._dorResults.filter(c => c.s === s).length }}</span>
+                            <span class="text-[8px] uppercase tracking-wide text-g-tx3 ml-1">{{ l }}</span>
+                          </div>
+                        </div>
+                      </div>
                     </template>
                   </div>
                   <div v-if="!loading" class="px-4 py-2.5 flex justify-between gap-2">
-                    <button @click="improve" :disabled="loading" class="btn-warn text-[11px]"><span v-icon="'sparkles'" style="display:inline-flex"></span> Verbessern</button>
-                    <button @click="step++" class="btn-pri text-[11px]">{{ sq.nextLabel || 'Freigabe' }} <span v-icon="'arrow-right'" style="display:inline-flex"></span></button>
+                    <button @click="recheckDor" :disabled="activeSession._dorChecking" class="btn-sec text-[11px]">
+                      <span v-if="activeSession._dorChecking" class="spinner" style="width:12px;height:12px"></span>
+                      <template v-else><span v-icon="'search'" style="display:inline-flex"></span> DoR prüfen</template>
+                    </button>
+                    <div class="flex gap-2">
+                      <button @click="improve" :disabled="loading" class="btn-warn text-[11px]"><span v-icon="'sparkles'" style="display:inline-flex"></span> Verbessern</button>
+                      <button @click="step++" class="btn-pri text-[11px]">{{ sq.nextLabel || 'Freigabe' }} <span v-icon="'arrow-right'" style="display:inline-flex"></span></button>
+                    </div>
                   </div>
                 </template>
 
@@ -594,6 +662,8 @@ body { margin:0 }
                       <div v-if="ctx.tags" class="mb-2">
                         <span v-for="(t, ti) in ctx.tags" :key="ti" class="font-mono text-[10.5px] font-medium py-[3px] px-[9px] rounded-full mr-1.5 inline-block" :style="tagStyle(t.s)">{{ t.text }}</span>
                       </div>
+                      <div v-if="ctx.title" class="text-sm font-bold mb-1">{{ ctx.title }}</div>
+                      <div v-if="ctx.preview" class="text-[12px] text-g-tx2 leading-6 whitespace-pre-wrap mb-3">{{ ctx.preview }}</div>
                       <!-- Table Data View -->
                       <div v-if="activeSession.tableData" class="mb-3">
                         <div class="flex items-center justify-between mb-2">
@@ -1018,20 +1088,18 @@ function parseN8nWorkflow(json) {
         if (params.path) webhookUrl = params.path;
         if (params.httpMethod) webhookUrl += ` (${params.httpMethod})`;
         const formFields = params.formFields?.values || params.options?.formFields || [];
-        if (formFields.length > 0) {
-          steps.push({
-            label: nodeName, type: 'input', title: nodeName,
-            actionLabel: 'Absenden', action: slugify(nodeName),
-            fields: formFields.map(f => ({
-              key: f.fieldLabel?.toLowerCase().replace(/\s+/g,'_') || f.name || `f_${Math.random().toString(36).slice(2,6)}`,
-              label: f.fieldLabel || f.name || 'Feld',
-              type: f.fieldType === 'textarea' ? 'textarea' : f.fieldType === 'dropdown' ? 'select' : 'text',
-              placeholder: f.placeholder || '',
-              options: f.fieldOptions?.values?.map(o => o.option) || undefined
-            }))
-          });
-        }
-        // If no form fields, don't create a step — trigger is handled implicitly
+        const isWebhook = (node.type || '').toLowerCase().includes('webhook');
+        steps.push({
+          label: 'Start', type: 'input', title: isWebhook ? 'Start' : nodeName,
+          actionLabel: formFields.length > 0 ? 'Absenden' : 'Starten', action: slugify(nodeName),
+          fields: formFields.map(f => ({
+            key: f.fieldLabel?.toLowerCase().replace(/\s+/g,'_') || f.name || `f_${Math.random().toString(36).slice(2,6)}`,
+            label: f.fieldLabel || f.name || 'Feld',
+            type: f.fieldType === 'textarea' ? 'textarea' : f.fieldType === 'dropdown' ? 'select' : 'text',
+            placeholder: f.placeholder || '',
+            options: f.fieldOptions?.values?.map(o => o.option) || undefined
+          }))
+        });
         break;
       }
       case 'input': {
@@ -1322,6 +1390,35 @@ const app = createApp({
       const cols = [...priority.filter(k => allKeys.has(k)), ...[...allKeys].filter(k => !priority.includes(k))];
       return { cols, rows: flat, total: flat.length };
     };
+    // Auto-detect Jira issue data and build context object
+    const parseJiraContext = (d) => {
+      // d could be array or single object; find first Jira-like item
+      const items = Array.isArray(d) ? d : (d && typeof d === 'object' && d.key && d.fields) ? [d] : null;
+      if (!items || items.length === 0) return null;
+      const issue = items[0];
+      const f = issue.fields;
+      if (!f || !issue.key) return null;
+      // Build tags
+      const tags = [{ text: issue.key, s: '' }];
+      if (f.issuetype?.name) tags.push({ text: f.issuetype.name, s: 'type' });
+      if (f.priority?.name) tags.push({ text: f.priority.name, s: 'pri' });
+      else if (f.status?.name) tags.push({ text: f.status.name, s: 'pri' });
+      if (f.customfield_10020?.[0]?.name) tags.push({ text: f.customfield_10020[0].name, s: 'type' });
+      // Build preview lines
+      const lines = [];
+      if (f.description) lines.push(f.description.replace(/\*/g, ''));
+      if (f.assignee?.displayName) lines.push(`Bearbeiter: ${f.assignee.displayName}`);
+      else if (f.creator?.displayName) lines.push(`Ersteller: ${f.creator.displayName}`);
+      if (f.duedate) lines.push(`Fällig: ${f.duedate}`);
+      if (f.subtasks?.length) lines.push(`Subtasks: ${f.subtasks.map(s => s.fields?.summary || s.key).join(', ')}`);
+      if (f.labels?.length) lines.push(`Labels: ${f.labels.join(', ')}`);
+      return {
+        title: f.summary || issue.key,
+        tags,
+        preview: lines.join('\n')
+      };
+    };
+
     const delay = () => new Promise(r => setTimeout(r, 400 + Math.random() * 500));
 
     const tagStyle = (s) => {
@@ -1514,9 +1611,29 @@ const app = createApp({
       const d = await callWH(sd.value.action, { form: s.form });
       if (d.demo && wf.value.demo) s.ctx = wf.value.demo.ctx || {};
       else if (d.context) s.ctx = d.context;
-      // Check for table data in response
-      const td = parseTableData(d);
-      if (td) s.tableData = td;
+      else {
+        // Auto-detect Jira-like response
+        const jiraCtx = parseJiraContext(d);
+        if (jiraCtx) {
+          s.ctx = jiraCtx;
+          // Store raw Jira fields for downstream steps
+          const raw = Array.isArray(d) ? d[0] : d;
+          if (raw?.fields) s.ctx._jiraFields = raw.fields;
+          s.ctx._jiraKey = raw?.key;
+        }
+      }
+      // Check for table data in response (skip if single Jira issue was detected)
+      if (!s.ctx?._jiraKey) {
+        const td = parseTableData(d);
+        if (td) s.tableData = td;
+      }
+      // If response is empty (no data found), stay on input step
+      const isEmpty = !s.tableData && !d.context && !d.demo && !s.ctx?.title && (Array.isArray(d) ? d.length === 0 : Object.keys(d).length === 0);
+      if (isEmpty) {
+        log('Keine Ergebnisse gefunden', false);
+        s.loading = false;
+        return;
+      }
       s.step++;
       const cs = wf.value.steps[s.step];
       if (cs?.type === 'check') {
@@ -1567,6 +1684,22 @@ const app = createApp({
     };
 
     const loadDemo = () => { if (wf.value.demo?.form && activeSession.value) activeSession.value.form = { ...wf.value.demo.form }; };
+
+    const recheckDor = async () => {
+      const s = activeSession.value; if (!s) return;
+      // Find the check step in this workflow
+      const checkStep = (wf.value.steps || []).find(st => st.type === 'check');
+      if (!checkStep) { log('Kein Check-Step vorhanden', false); return; }
+      s._dorChecking = true;
+      s._dorResults = null;
+      const d = await callWH(checkStep.action, { form: s.form, context: s.ctx, text: s.text });
+      if (d.demo && wf.value.demo) s._dorResults = wf.value.demo.checks || [];
+      else if (d.check_results) s._dorResults = d.check_results;
+      // Also update the main checks so they stay in sync
+      if (s._dorResults) s.checks = s._dorResults;
+      s._dorChecking = false;
+      log('DoR neu geprüft');
+    };
 
     const goBackToEdit = () => {
       const s = activeSession.value; if (!s) return;
@@ -1619,7 +1752,7 @@ const app = createApp({
       wf, sd,
       cnt, tagStyle, addField, newSession, closeSession, deleteWorkflow, toggleImport, reset,
       execInput, execCheck, goEdit, improve, approve,
-      loadDemo, goBackToEdit, handleImport, confirmImport, handleFile
+      recheckDor, loadDemo, goBackToEdit, handleImport, confirmImport, handleFile
     };
   }
 });
