@@ -5,15 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>g3nui — Human-in-the-Loop Engine</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
 <script>
 tailwind.config = {
   theme: {
     extend: {
       colors: {
         g: {
-          bg:'#0a0b0e', bg2:'#101218', sf:'#16181f', sf2:'#1c1f28',
-          bd:'#262a36', bd2:'#333848', tx:'#eaecf2', tx2:'#a0a5b8', tx3:'#5d6278',
-          ac:'#818cf8', ac2:'#6366f1', gn:'#34d399', am:'#fbbf24', rd:'#fb7185', cy:'#22d3ee'
+          bg:  'rgb(var(--g-bg-rgb) / <alpha-value>)',
+          bg2: 'rgb(var(--g-bg2-rgb) / <alpha-value>)',
+          sf:  'rgb(var(--g-sf-rgb) / <alpha-value>)',
+          sf2: 'rgb(var(--g-sf2-rgb) / <alpha-value>)',
+          bd:  'rgb(var(--g-bd-rgb) / <alpha-value>)',
+          bd2: 'rgb(var(--g-bd2-rgb) / <alpha-value>)',
+          tx:  'rgb(var(--g-tx-rgb) / <alpha-value>)',
+          tx2: 'rgb(var(--g-tx2-rgb) / <alpha-value>)',
+          tx3: 'rgb(var(--g-tx3-rgb) / <alpha-value>)',
+          ac:  'rgb(var(--g-ac-rgb) / <alpha-value>)',
+          ac2: 'rgb(var(--g-ac2-rgb) / <alpha-value>)',
+          gn:  'rgb(var(--g-gn-rgb) / <alpha-value>)',
+          am:  'rgb(var(--g-am-rgb) / <alpha-value>)',
+          rd:  'rgb(var(--g-rd-rgb) / <alpha-value>)',
+          cy:  'rgb(var(--g-cy-rgb) / <alpha-value>)'
         }
       },
       fontFamily: { sans: ["'Segoe UI'","system-ui","sans-serif"] }
@@ -22,21 +35,36 @@ tailwind.config = {
 }
 </script>
 <style>
+:root {
+  --g-bg-rgb:10 11 14; --g-bg2-rgb:16 18 24; --g-sf-rgb:22 24 31; --g-sf2-rgb:28 31 40;
+  --g-bd-rgb:38 42 54; --g-bd2-rgb:51 56 72;
+  --g-tx-rgb:234 236 242; --g-tx2-rgb:160 165 184; --g-tx3-rgb:93 98 120;
+  --g-ac-rgb:129 140 248; --g-ac2-rgb:99 102 241;
+  --g-gn-rgb:52 211 153; --g-am-rgb:251 191 36; --g-rd-rgb:251 113 133; --g-cy-rgb:34 211 238;
+  /* hex refs for inline styles */
+  --g-bg:#0a0b0e; --g-bg2:#101218; --g-sf:#16181f; --g-sf2:#1c1f28;
+  --g-bd:#262a36; --g-bd2:#333848;
+  --g-tx:#eaecf2; --g-tx2:#a0a5b8; --g-tx3:#5d6278;
+  --g-ac:#818cf8; --g-ac2:#6366f1;
+  --g-gn:#34d399; --g-am:#fbbf24; --g-rd:#fb7185; --g-cy:#22d3ee;
+}
 @keyframes spin { to { transform: rotate(360deg) } }
-textarea:focus, input:focus { outline:none; border-color:#818cf8 !important }
-::placeholder { color:#5d6278 }
+textarea:focus, input:focus { outline:none; border-color:var(--g-ac) !important }
+::placeholder { color:var(--g-tx3) }
 ::-webkit-scrollbar { width:5px }
-::-webkit-scrollbar-thumb { background:#262a36; border-radius:10px }
+::-webkit-scrollbar-thumb { background:var(--g-bd); border-radius:10px }
 body { margin:0 }
-.sec-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:#5d6278; margin-bottom:10px }
-.btn-pri { font-family:inherit; font-size:12.5px; font-weight:600; padding:8px 18px; border-radius:8px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .12s; background:#818cf8; color:#fff }
-.btn-sec { font-family:inherit; font-size:12.5px; font-weight:600; padding:8px 18px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .12s; background:#1c1f28; color:#a0a5b8; border:1px solid #262a36 }
-.btn-ok  { font-family:inherit; font-size:12.5px; font-weight:600; padding:8px 18px; border-radius:8px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .12s; background:#34d399; color:#0a0b0e }
-.btn-warn{ font-family:inherit; font-size:12.5px; font-weight:600; padding:8px 18px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .12s; background:#fbbf2418; color:#fbbf24; border:1px solid #fbbf2433 }
-.btn-ghost{font-family:inherit; font-size:12.5px; font-weight:600; padding:8px 18px; border-radius:8px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .12s; background:transparent; color:#5d6278 }
-.btn-pri:hover{filter:brightness(1.1)} .btn-sec:hover{border-color:#333848} .btn-ok:hover{filter:brightness(1.1)} .btn-warn:hover{background:#fbbf2425} .btn-ghost:hover{color:#a0a5b8}
+.sec-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:var(--g-tx3); margin-bottom:10px }
+.btn-pri { font-family:inherit; font-size:12.5px; font-weight:600; padding:8px 18px; border-radius:8px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .12s; background:var(--g-ac); color:#fff }
+.btn-sec { font-family:inherit; font-size:12.5px; font-weight:600; padding:8px 18px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .12s; background:var(--g-sf2); color:var(--g-tx2); border:1px solid var(--g-bd) }
+.btn-ok  { font-family:inherit; font-size:12.5px; font-weight:600; padding:8px 18px; border-radius:8px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .12s; background:var(--g-gn); color:var(--g-bg) }
+.btn-warn{ font-family:inherit; font-size:12.5px; font-weight:600; padding:8px 18px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .12s; background:color-mix(in srgb, var(--g-am) 10%, transparent); color:var(--g-am); border:1px solid color-mix(in srgb, var(--g-am) 20%, transparent) }
+.btn-ghost{font-family:inherit; font-size:12.5px; font-weight:600; padding:8px 18px; border-radius:8px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .12s; background:transparent; color:var(--g-tx3) }
+.btn-pri:hover{filter:brightness(1.1)} .btn-sec:hover{border-color:var(--g-bd2)} .btn-ok:hover{filter:brightness(1.1)} .btn-warn:hover{filter:brightness(1.15)} .btn-ghost:hover{color:var(--g-tx2)}
 .spinner { display:inline-block; width:16px; height:16px; border:2px solid transparent; border-top-color:currentColor; border-radius:50%; animation:spin .6s linear infinite }
 .spinner-lg { display:inline-block; width:24px; height:24px; border:2px solid transparent; border-top-color:currentColor; border-radius:50%; animation:spin .6s linear infinite }
+.g-swatch { width:14px; height:14px; border-radius:9999px; transition:all .15s; cursor:pointer; border:0; padding:0; flex-shrink:0 }
+.g-swatch:hover { transform:scale(1.25) }
 </style>
 </head>
 <body class="bg-g-bg text-g-tx font-sans min-h-screen">
@@ -49,7 +77,7 @@ body { margin:0 }
       <div class="px-4 pb-4 border-b border-g-bd mb-3">
         <h1 class="text-[15px] font-extrabold tracking-tight flex items-center gap-2">
           <span class="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-extrabold text-g-bg"
-                style="background:linear-gradient(135deg,#818cf8,#22d3ee)">G</span>
+                style="background:linear-gradient(135deg,var(--g-ac),var(--g-cy))">G</span>
           g3nui
         </h1>
         <p class="text-[10.5px] text-g-tx3 mt-0.5">Human-in-the-Loop Engine</p>
@@ -61,8 +89,8 @@ body { margin:0 }
              @click="switchWf(i)"
              class="flex items-center gap-2 py-[7px] px-2.5 rounded-lg cursor-pointer mb-0.5 border transition-colors"
              :class="i === wfIdx ? 'border-g-ac/20 bg-g-ac/[0.08]' : 'border-transparent hover:bg-white/[0.02]'">
-          <span class="w-[26px] h-[26px] rounded-md flex items-center justify-center text-[13px]"
-                :style="{ background: w.color+'22', color: w.color }">{{ w.icon }}</span>
+          <span class="w-[26px] h-[26px] rounded-md flex items-center justify-center"
+                :style="{ background: w.color+'22', color: w.color }"><span v-icon="w.icon" style="display:inline-flex"></span></span>
           <div>
             <div class="text-xs" :class="i === wfIdx ? 'font-semibold text-g-ac' : 'font-medium text-g-tx'">{{ w.name }}</div>
             <div class="text-[10px] text-g-tx3">{{ (w.steps||[]).length }} Schritte</div>
@@ -72,14 +100,25 @@ body { margin:0 }
         <button @click="view = view === 'import' ? 'run' : 'import'"
                 class="w-full mt-3 py-2 px-2.5 text-[11.5px] font-semibold rounded-lg flex items-center justify-center gap-1.5 border border-dashed transition-colors cursor-pointer bg-transparent"
                 :class="view === 'import' ? 'border-g-ac text-g-ac' : 'border-g-bd text-g-tx3 hover:border-g-tx3'">
-          ⚡ n8n Workflow importieren
+          <span v-icon="'zap'" style="display:inline-flex"></span> n8n Workflow importieren
         </button>
+      </div>
+
+      <!-- Theme Swatches -->
+      <div class="px-3 pt-3 border-t border-g-bd" style="margin-top:auto">
+        <div class="text-[10px] font-bold uppercase tracking-wider text-g-tx3 mb-2 px-0.5">Theme</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px">
+          <button v-for="(t, id) in themes" :key="id" @click="applyTheme(id)"
+            class="g-swatch"
+            :style="{ background: t.preview, boxShadow: currentTheme === id ? '0 0 0 2px var(--g-bg2), 0 0 0 3px var(--g-ac)' : 'none' }"
+            :title="t.name"></button>
+        </div>
       </div>
 
       <div class="px-2.5 pt-3 border-t border-g-bd">
         <button @click="showCfg = !showCfg"
                 class="w-full text-[11px] font-semibold py-[7px] px-2.5 text-left text-g-tx3 bg-transparent border-none cursor-pointer hover:text-g-tx2">
-          ⚙ Webhook
+          <span v-icon="'settings'" style="display:inline-flex;vertical-align:-2px"></span> Webhook
         </button>
         <div v-if="showCfg" class="mt-2 p-2.5 bg-g-sf border border-g-bd rounded-lg">
           <label class="block text-[10px] font-bold uppercase tracking-wide text-g-tx3 mb-1">Webhook URL</label>
@@ -102,8 +141,8 @@ body { margin:0 }
 
         <div class="flex gap-2.5 mb-3.5">
           <input ref="fileRef" type="file" accept=".json" @change="handleFile" class="hidden" />
-          <button @click="$refs.fileRef.click()" class="btn-sec text-xs">📁 JSON-Datei laden</button>
-          <button @click="importJson = ''" class="btn-ghost text-xs">✕ Leeren</button>
+          <button @click="$refs.fileRef.click()" class="btn-sec text-xs"><span v-icon="'folder-open'" style="display:inline-flex"></span> JSON-Datei laden</button>
+          <button @click="importJson = ''" class="btn-ghost text-xs"><span v-icon="'x'" style="display:inline-flex"></span> Leeren</button>
         </div>
 
         <textarea v-model="importJson" rows="14"
@@ -116,7 +155,7 @@ body { margin:0 }
         <div class="mt-3.5 flex gap-2">
           <button @click="handleImport" :disabled="!importJson.trim()"
                   class="btn-pri" :class="{ 'opacity-40': !importJson.trim() }">
-            🔍 Workflow analysieren
+            <span v-icon="'search'" style="display:inline-flex"></span> Workflow analysieren
           </button>
         </div>
 
@@ -124,10 +163,10 @@ body { margin:0 }
         <div v-if="importPreview" class="mt-5 bg-g-sf border border-g-bd rounded-xl overflow-hidden">
           <div class="px-5 py-4 border-b border-g-bd flex justify-between items-center">
             <div>
-              <h3 class="text-sm font-bold">{{ importPreview.icon }} {{ importPreview.name }}</h3>
+              <h3 class="text-sm font-bold flex items-center gap-1.5"><span v-icon="importPreview.icon" data-size="15" style="display:inline-flex"></span> {{ importPreview.name }}</h3>
               <p class="text-[11.5px] text-g-tx2">{{ importPreview.description }}</p>
             </div>
-            <button @click="confirmImport" class="btn-ok">✓ Importieren &amp; verwenden</button>
+            <button @click="confirmImport" class="btn-ok"><span v-icon="'check'" style="display:inline-flex"></span> Importieren &amp; verwenden</button>
           </div>
           <div class="p-5">
             <div class="sec-label">Generierte Schritte ({{ importPreview.steps.length }})</div>
@@ -136,7 +175,8 @@ body { margin:0 }
                 <div class="bg-g-bg border border-g-bd rounded-lg py-2.5 px-3.5 min-w-[120px]">
                   <div class="text-[10px] font-bold uppercase tracking-wide mb-1"
                        :class="s.type==='input'?'text-g-ac':s.type==='check'?'text-g-am':s.type==='edit'?'text-g-cy':'text-g-gn'">
-                    {{ s.type==='input'?'📥 Eingabe':s.type==='check'?'🔍 Prüfung':s.type==='edit'?'✏️ Bearbeiten':'✅ Freigabe' }}
+                    <span v-icon="s.type==='input'?'log-in':s.type==='check'?'search':s.type==='edit'?'pencil':'circle-check'" data-size="11" style="display:inline-flex;vertical-align:-1px"></span>
+                    {{ s.type==='input'?' Eingabe':s.type==='check'?' Prüfung':s.type==='edit'?' Bearbeiten':' Freigabe' }}
                   </div>
                   <div class="text-xs font-semibold">{{ s.label }}</div>
                   <div class="text-[10.5px] text-g-tx3 mt-0.5">
@@ -170,8 +210,8 @@ body { margin:0 }
             <span class="text-xs text-g-tx2 ml-2.5">{{ wf.description }}</span>
           </div>
           <div class="flex gap-2">
-            <button v-if="step > 0" @click="reset" class="btn-ghost">↺ Neustart</button>
-            <button @click="view = 'inspect'" class="btn-ghost text-[11px]">{ } JSON</button>
+            <button v-if="step > 0" @click="reset" class="btn-ghost"><span v-icon="'rotate-ccw'" style="display:inline-flex"></span> Neustart</button>
+            <button @click="view = 'inspect'" class="btn-ghost text-[11px]"><span v-icon="'braces'" style="display:inline-flex"></span> JSON</button>
           </div>
         </div>
 
@@ -182,7 +222,8 @@ body { margin:0 }
               <div class="flex items-center gap-[7px] flex-shrink-0">
                 <span class="w-[26px] h-[26px] rounded-full flex items-center justify-center text-[11px] font-bold border-2"
                       :class="step > i ? 'border-g-gn bg-g-gn text-g-bg' : step === i ? 'border-g-ac bg-g-ac text-g-bg' : 'border-g-bd bg-g-sf text-g-tx3'">
-                  {{ step > i ? '✓' : i + 1 }}
+                  <span v-if="step > i" v-icon="'check'" style="display:inline-flex"></span>
+                  <template v-else>{{ i + 1 }}</template>
                 </span>
                 <span class="text-xs" :class="step > i ? 'font-medium text-g-gn' : step === i ? 'font-semibold text-g-tx' : 'font-medium text-g-tx3'">
                   {{ s.label }}
@@ -219,7 +260,7 @@ body { margin:0 }
                 <button v-if="wf.demo" @click="loadDemo" class="btn-ghost">Demo laden</button>
                 <button @click="execInput" :disabled="loading" class="btn-pri" :class="{ 'opacity-40': loading }">
                   <span v-if="loading" class="spinner"></span>
-                  <template v-else>{{ sd.actionLabel || 'Weiter' }} →</template>
+                  <template v-else>{{ sd.actionLabel || 'Weiter' }} <span v-icon="'arrow-right'" style="display:inline-flex"></span></template>
                 </button>
               </div>
             </template>
@@ -246,7 +287,7 @@ body { margin:0 }
                        :class="ci < checks.length - 1 ? 'border-b border-g-bd' : ''">
                     <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] flex-shrink-0"
                           :class="item.s==='pass'?'bg-g-gn/10 text-g-gn':item.s==='fail'?'bg-g-rd/10 text-g-rd':'bg-g-am/10 text-g-am'">
-                      {{ item.s==='pass'?'✓':item.s==='fail'?'✕':'!' }}
+                      <span v-icon="item.s==='pass'?'check':item.s==='fail'?'x':'alert-triangle'" data-size="11" style="display:inline-flex"></span>
                     </span>
                     <div>
                       <div class="text-[13px] font-medium">{{ item.c }}</div>
@@ -264,10 +305,10 @@ body { margin:0 }
               </div>
               <div v-if="!loading && checks.length > 0"
                    class="px-[22px] py-3 bg-g-bg2 border-t border-g-bd flex justify-between flex-wrap gap-2">
-                <button @click="step--" class="btn-sec">← Zurück</button>
+                <button @click="step--" class="btn-sec"><span v-icon="'arrow-left'" style="display:inline-flex"></span> Zurück</button>
                 <div class="flex gap-2">
-                  <button @click="execCheck" class="btn-warn">↻ Nochmal</button>
-                  <button @click="goEdit" class="btn-pri">{{ sd.nextLabel || 'Weiter' }} →</button>
+                  <button @click="execCheck" class="btn-warn"><span v-icon="'refresh-cw'" style="display:inline-flex"></span> Nochmal</button>
+                  <button @click="goEdit" class="btn-pri">{{ sd.nextLabel || 'Weiter' }} <span v-icon="'arrow-right'" style="display:inline-flex"></span></button>
                 </div>
               </div>
             </template>
@@ -293,10 +334,10 @@ body { margin:0 }
                 </template>
               </div>
               <div v-if="!loading" class="px-[22px] py-3 bg-g-bg2 border-t border-g-bd flex justify-between flex-wrap gap-2">
-                <button @click="step--" class="btn-sec">← Zurück</button>
+                <button @click="step--" class="btn-sec"><span v-icon="'arrow-left'" style="display:inline-flex"></span> Zurück</button>
                 <div class="flex gap-2">
-                  <button @click="improve" :disabled="loading" class="btn-warn">✦ Verbessern</button>
-                  <button @click="step++" class="btn-pri">{{ sd.nextLabel || 'Freigabe' }} →</button>
+                  <button @click="improve" :disabled="loading" class="btn-warn"><span v-icon="'sparkles'" style="display:inline-flex"></span> Verbessern</button>
+                  <button @click="step++" class="btn-pri">{{ sd.nextLabel || 'Freigabe' }} <span v-icon="'arrow-right'" style="display:inline-flex"></span></button>
                 </div>
               </div>
             </template>
@@ -317,7 +358,7 @@ body { margin:0 }
                 </template>
                 <template v-else>
                   <div class="text-center py-8 px-5">
-                    <div class="text-[38px] mb-2.5">✅</div>
+                    <div class="mb-2.5 text-g-gn flex justify-center"><span v-icon="'circle-check'" data-size="38" style="display:inline-flex"></span></div>
                     <h2 class="text-[17px] font-bold mb-1">{{ sd.doneTitle || 'Abgeschlossen' }}</h2>
                     <p class="text-g-tx2 text-[13px]">{{ sd.doneText || 'Workflow abgeschlossen.' }}</p>
                     <div class="mt-3.5 bg-g-bg border border-g-bd rounded-lg p-4 text-left">
@@ -327,12 +368,12 @@ body { margin:0 }
                 </template>
               </div>
               <div v-if="!done" class="px-[22px] py-3 bg-g-bg2 border-t border-g-bd flex justify-between flex-wrap gap-2">
-                <button @click="step--" class="btn-sec">← Bearbeiten</button>
+                <button @click="step--" class="btn-sec"><span v-icon="'arrow-left'" style="display:inline-flex"></span> Bearbeiten</button>
                 <div class="flex gap-2">
-                  <button @click="goBackToEdit" class="btn-warn">↻ Nochmal</button>
+                  <button @click="goBackToEdit" class="btn-warn"><span v-icon="'refresh-cw'" style="display:inline-flex"></span> Nochmal</button>
                   <button @click="approve" :disabled="loading" class="btn-ok" :class="{ 'opacity-40': loading }">
                     <span v-if="loading" class="spinner"></span>
-                    <template v-else>✓ {{ sd.approveLabel || 'Freigeben' }}</template>
+                    <template v-else><span v-icon="'check'" style="display:inline-flex"></span> {{ sd.approveLabel || 'Freigeben' }}</template>
                   </button>
                 </div>
               </div>
@@ -360,7 +401,7 @@ body { margin:0 }
       <div v-if="view === 'inspect'" class="p-7">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-base font-bold">Workflow-Config: {{ wf.name }}</h2>
-          <button @click="view = 'run'" class="btn-sec">← Zurück</button>
+          <button @click="view = 'run'" class="btn-sec"><span v-icon="'arrow-left'" style="display:inline-flex"></span> Zurück</button>
         </div>
         <pre class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2.5 text-xs text-g-tx font-mono whitespace-pre-wrap leading-relaxed overflow-auto"
              style="min-height:300px">{{ JSON.stringify(wf, null, 2) }}</pre>
@@ -373,13 +414,95 @@ body { margin:0 }
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script>
 // ══════════════════════════════════════════
-//  THEME (for dynamic inline styles)
+//  THEME ENGINE
 // ══════════════════════════════════════════
-const T = {
-  bg:'#0a0b0e', bg2:'#101218', sf:'#16181f', sf2:'#1c1f28',
-  bd:'#262a36', bd2:'#333848', tx:'#eaecf2', tx2:'#a0a5b8', tx3:'#5d6278',
-  ac:'#818cf8', ac2:'#6366f1', gn:'#34d399', am:'#fbbf24', rd:'#fb7185', cy:'#22d3ee'
+const THEME_KEY = 'g3nui-theme';
+const THEMES = {
+  'g3nui-default': {
+    name:'G3NUI', preview:'#818cf8',
+    vars:{ '--g-bg':'#0a0b0e','--g-bg2':'#101218','--g-sf':'#16181f','--g-sf2':'#1c1f28','--g-bd':'#262a36','--g-bd2':'#333848','--g-tx':'#eaecf2','--g-tx2':'#a0a5b8','--g-tx3':'#5d6278','--g-ac':'#818cf8','--g-ac2':'#6366f1','--g-gn':'#34d399','--g-am':'#fbbf24','--g-rd':'#fb7185','--g-cy':'#22d3ee' }
+  },
+  'github-light': {
+    name:'GitHub Light', preview:'#0969da', light:true,
+    vars:{ '--g-bg':'#ffffff','--g-bg2':'#f0f3f6','--g-sf':'#f6f8fa','--g-sf2':'#eaeef2','--g-bd':'#d0d7de','--g-bd2':'#d0d7de','--g-tx':'#1f2328','--g-tx2':'#656d76','--g-tx3':'#8c959f','--g-ac':'#0969da','--g-ac2':'#0550ae','--g-gn':'#1a7f37','--g-am':'#9a6700','--g-rd':'#cf222e','--g-cy':'#0550ae' }
+  },
+  'solarized-light': {
+    name:'Solarized Light', preview:'#268bd2', light:true,
+    vars:{ '--g-bg':'#fdf6e3','--g-bg2':'#f5eedb','--g-sf':'#eee8d5','--g-sf2':'#e4ddc8','--g-bd':'#d5cdb6','--g-bd2':'#d5cdb6','--g-tx':'#073642','--g-tx2':'#586e75','--g-tx3':'#93a1a1','--g-ac':'#268bd2','--g-ac2':'#2aa198','--g-gn':'#859900','--g-am':'#b58900','--g-rd':'#dc322f','--g-cy':'#2aa198' }
+  },
+  'absent-light': {
+    name:'Absent Light', preview:'#228a96', light:true,
+    vars:{ '--g-bg':'#ffffff','--g-bg2':'#f2f2f2','--g-sf':'#f2f2f2','--g-sf2':'#e8e9ea','--g-bd':'#e0e0e0','--g-bd2':'#e0e0e0','--g-tx':'#465360','--g-tx2':'#738699','--g-tx3':'#aeb9c4','--g-ac':'#228a96','--g-ac2':'#1a6e78','--g-gn':'#478e5f','--g-am':'#c48405','--g-rd':'#e61f44','--g-cy':'#1a6e78' }
+  },
+  'navy-gold': {
+    name:'Navy Gold', preview:'#c4a265',
+    vars:{ '--g-bg':'#0f1923','--g-bg2':'#0a1219','--g-sf':'#1a2a3a','--g-sf2':'#243447','--g-bd':'#2a3a4d','--g-bd2':'#1e2e3e','--g-tx':'#e4dfd8','--g-tx2':'#8a9aad','--g-tx3':'#4d5d6e','--g-ac':'#c4a265','--g-ac2':'#a88b52','--g-gn':'#4caf7c','--g-am':'#d4a537','--g-rd':'#e85d55','--g-cy':'#5e9cc4' }
+  },
+  'github-dark': {
+    name:'GitHub Dark', preview:'#58a6ff',
+    vars:{ '--g-bg':'#0d1117','--g-bg2':'#010409','--g-sf':'#161b22','--g-sf2':'#21262d','--g-bd':'#30363d','--g-bd2':'#21262d','--g-tx':'#e6edf3','--g-tx2':'#8b949e','--g-tx3':'#484f58','--g-ac':'#58a6ff','--g-ac2':'#1f6feb','--g-gn':'#3fb950','--g-am':'#d29922','--g-rd':'#f85149','--g-cy':'#1f6feb' }
+  },
+  'dracula': {
+    name:'Dracula', preview:'#ff79c6',
+    vars:{ '--g-bg':'#282a36','--g-bg2':'#21222c','--g-sf':'#343746','--g-sf2':'#44475a','--g-bd':'#44475a','--g-bd2':'#343746','--g-tx':'#f8f8f2','--g-tx2':'#bfbfbf','--g-tx3':'#6272a4','--g-ac':'#ff79c6','--g-ac2':'#bd93f9','--g-gn':'#50fa7b','--g-am':'#f1fa8c','--g-rd':'#ff5555','--g-cy':'#8be9fd' }
+  },
+  'monokai-pro': {
+    name:'Monokai Pro', preview:'#ffd866',
+    vars:{ '--g-bg':'#2d2a2e','--g-bg2':'#221f22','--g-sf':'#363337','--g-sf2':'#403e41','--g-bd':'#49474a','--g-bd2':'#363337','--g-tx':'#fcfcfa','--g-tx2':'#c1c0c0','--g-tx3':'#727072','--g-ac':'#ffd866','--g-ac2':'#a9dc76','--g-gn':'#a9dc76','--g-am':'#fc9867','--g-rd':'#ff6188','--g-cy':'#78dce8' }
+  },
+  'nord': {
+    name:'Nord', preview:'#88c0d0',
+    vars:{ '--g-bg':'#2e3440','--g-bg2':'#242933','--g-sf':'#3b4252','--g-sf2':'#434c5e','--g-bd':'#434c5e','--g-bd2':'#3b4252','--g-tx':'#eceff4','--g-tx2':'#d8dee9','--g-tx3':'#4c566a','--g-ac':'#88c0d0','--g-ac2':'#5e81ac','--g-gn':'#a3be8c','--g-am':'#ebcb8b','--g-rd':'#bf616a','--g-cy':'#8fbcbb' }
+  },
+  'catppuccin': {
+    name:'Catppuccin', preview:'#cba6f7',
+    vars:{ '--g-bg':'#1e1e2e','--g-bg2':'#181825','--g-sf':'#313244','--g-sf2':'#45475a','--g-bd':'#45475a','--g-bd2':'#313244','--g-tx':'#cdd6f4','--g-tx2':'#bac2de','--g-tx3':'#6c7086','--g-ac':'#cba6f7','--g-ac2':'#89b4fa','--g-gn':'#a6e3a1','--g-am':'#f9e2af','--g-rd':'#f38ba8','--g-cy':'#94e2d5' }
+  },
+  'midnight-emerald': {
+    name:'Emerald', preview:'#50c878',
+    vars:{ '--g-bg':'#0a1a14','--g-bg2':'#06120d','--g-sf':'#132e22','--g-sf2':'#1d3f30','--g-bd':'#1d3f30','--g-bd2':'#162e23','--g-tx':'#d8e8df','--g-tx2':'#7fa893','--g-tx3':'#4a6b5a','--g-ac':'#50c878','--g-ac2':'#3da562','--g-gn':'#50c878','--g-am':'#d4a537','--g-rd':'#e06060','--g-cy':'#5eb89a' }
+  },
+  'slate-rose': {
+    name:'Slate Ros\u00e9', preview:'#e8758a',
+    vars:{ '--g-bg':'#1a1520','--g-bg2':'#120e18','--g-sf':'#2a2335','--g-sf2':'#3a3148','--g-bd':'#3a3148','--g-bd2':'#2a2335','--g-tx':'#e8e0ef','--g-tx2':'#9e8fb0','--g-tx3':'#5e5270','--g-ac':'#e8758a','--g-ac2':'#c45f72','--g-gn':'#6dbe82','--g-am':'#d4a065','--g-rd':'#e85d55','--g-cy':'#7a9bbe' }
+  },
+  'carbon': {
+    name:'Carbon', preview:'#a0a0a0',
+    vars:{ '--g-bg':'#161616','--g-bg2':'#0d0d0d','--g-sf':'#262626','--g-sf2':'#393939','--g-bd':'#393939','--g-bd2':'#262626','--g-tx':'#f4f4f4','--g-tx2':'#a8a8a8','--g-tx3':'#6f6f6f','--g-ac':'#a0a0a0','--g-ac2':'#808080','--g-gn':'#42be65','--g-am':'#f1c21b','--g-rd':'#fa4d56','--g-cy':'#4589ff' }
+  },
+  'solarized-dark': {
+    name:'Solarized Dark', preview:'#2aa198',
+    vars:{ '--g-bg':'#002b36','--g-bg2':'#001e26','--g-sf':'#073642','--g-sf2':'#094856','--g-bd':'#094856','--g-bd2':'#073642','--g-tx':'#fdf6e3','--g-tx2':'#93a1a1','--g-tx3':'#586e75','--g-ac':'#268bd2','--g-ac2':'#2aa198','--g-gn':'#859900','--g-am':'#b58900','--g-rd':'#dc322f','--g-cy':'#2aa198' }
+  }
 };
+
+function hexToRgb(hex) {
+  const h = hex.replace('#','');
+  return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)].join(' ');
+}
+
+function setTheme(name) {
+  const theme = THEMES[name];
+  if (!theme) return;
+  const rs = document.documentElement.style;
+  for (const [k, v] of Object.entries(theme.vars)) {
+    rs.setProperty(k, v);                         // --g-bg: #0a0b0e (for inline styles)
+    rs.setProperty(k + '-rgb', hexToRgb(v)); // --g-bg-rgb: 10 11 14 (for Tailwind)
+  }
+  rs.colorScheme = theme.light ? 'light' : 'dark';
+  try { localStorage.setItem(THEME_KEY, name); } catch {}
+}
+
+// Restore saved theme
+(function() {
+  const s = localStorage.getItem(THEME_KEY) || 'g3nui-default';
+  if (THEMES[s]) setTheme(s);
+})();
+
+// T reads live CSS vars for dynamic inline styles
+const T = new Proxy({}, {
+  get(_, k) { return getComputedStyle(document.documentElement).getPropertyValue('--g-' + k).trim(); }
+});
 
 // ══════════════════════════════════════════
 //  HELPERS
@@ -572,7 +695,7 @@ function parseN8nWorkflow(json) {
   return {
     id: `n8n_${Date.now()}`, name: wfName,
     description: `Importiert aus n8n (${nodes.length} Nodes)`,
-    icon: '⚡', color: T.cy, prefix: slugify(wfName),
+    icon: 'zap', color: T.cy, prefix: slugify(wfName),
     steps: deduped, webhookUrl, nodeCount: nodes.length, _raw: data
   };
 }
@@ -583,7 +706,7 @@ function parseN8nWorkflow(json) {
 const DEMOS = [
   {
     id:'jira-dor', name:'Jira DoR Review', description:'Tickets gegen Definition of Ready prüfen',
-    icon:'🎯', color:'#818cf8', prefix:'jira_dor',
+    icon:'target', color:'#818cf8', prefix:'jira_dor',
     steps:[
       { label:'Ticket laden', type:'input', title:'Jira Ticket-Key', actionLabel:'Laden', action:'load',
         fields:[{key:'ticket_key',label:'Ticket-Key',type:'text',placeholder:'PROJ-1234'}] },
@@ -637,6 +760,9 @@ const app = createApp({
     const importJson = ref('');
     const importErr = ref('');
     const importPreview = ref(null);
+    const currentTheme = ref(localStorage.getItem(THEME_KEY) || 'g3nui-default');
+    const themes = THEMES;
+    const applyTheme = (id) => { setTheme(id); currentTheme.value = id; };
 
     const wf = computed(() => workflows.value[wfIdx.value] || DEMOS[0]);
     const sd = computed(() => (wf.value.steps || [])[step.value] || {});
@@ -758,12 +884,33 @@ const app = createApp({
 
     return {
       workflows, wfIdx, view, step, loading, done, form, ctx, checks, text, instr, logs,
-      webhook, showCfg, importJson, importErr, importPreview,
+      webhook, showCfg, importJson, importErr, importPreview, currentTheme, themes, applyTheme,
       wf, sd,
       cnt, tagStyle, switchWf, reset, execInput, execCheck, goEdit, improve, approve,
       loadDemo, goBackToEdit, handleImport, confirmImport, handleFile
     };
   }
+});
+
+// Lucide icon rendering via Vue directive (registered before mount)
+function _renderIcon(el, name) {
+  const size = el.getAttribute('data-size') || '14';
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = '<i data-lucide="' + name + '"></i>';
+  document.body.appendChild(wrapper);
+  lucide.createIcons({ nodes: wrapper.querySelectorAll('[data-lucide]') });
+  const svg = wrapper.querySelector('svg');
+  if (svg) {
+    svg.setAttribute('width', size);
+    svg.setAttribute('height', size);
+    el.replaceChildren(svg);
+  }
+  wrapper.remove();
+}
+
+app.directive('icon', {
+  mounted(el, binding) { _renderIcon(el, binding.value); },
+  updated(el, binding) { if (binding.value !== binding.oldValue) _renderIcon(el, binding.value); }
 });
 
 app.mount('#app');
