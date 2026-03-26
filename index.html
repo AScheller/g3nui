@@ -414,8 +414,35 @@ body { margin:0 }
                           class="font-mono text-[10.5px] font-medium py-[3px] px-[9px] rounded-full mr-1.5 inline-block"
                           :style="tagStyle(t.s)">{{ t.text }}</span>
                   </div>
-                  <div class="bg-g-bg border border-g-bd rounded-lg p-4">
-                    <pre class="font-sans text-[13px] text-g-tx whitespace-pre-wrap leading-7 m-0">{{ text || '(Kein Inhalt)' }}</pre>
+                  <!-- Table Data -->
+                  <div v-if="activeSession.tableData" class="mb-3">
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-[11px] font-bold text-g-tx3">{{ activeSession.tableData.total }} Einträge</span>
+                    </div>
+                    <div class="bg-g-bg border border-g-bd rounded-lg overflow-auto" style="max-height:450px">
+                      <table class="w-full text-xs border-collapse">
+                        <thead>
+                          <tr class="bg-g-sf sticky top-0">
+                            <th v-for="col in activeSession.tableData.cols.slice(0, 8)" :key="col"
+                                class="text-left text-[10px] font-bold uppercase tracking-wide text-g-tx3 px-3 py-2.5 border-b border-g-bd whitespace-nowrap">{{ col }}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="(row, ri) in activeSession.tableData.rows" :key="ri"
+                              class="border-b border-g-bd/50 hover:bg-g-sf/30 transition-colors">
+                            <td v-for="col in activeSession.tableData.cols.slice(0, 8)" :key="col"
+                                class="px-3 py-2 text-g-tx font-mono text-[11px] max-w-[280px] truncate"
+                                :title="String(row[col] ?? '')">{{ row[col] ?? '' }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <div v-if="text" class="bg-g-bg border border-g-bd rounded-lg p-4">
+                    <pre class="font-sans text-[13px] text-g-tx whitespace-pre-wrap leading-7 m-0">{{ text }}</pre>
+                  </div>
+                  <div v-if="!activeSession.tableData && !text" class="bg-g-bg border border-g-bd rounded-lg p-4">
+                    <pre class="font-sans text-[13px] text-g-tx whitespace-pre-wrap leading-7 m-0">(Kein Inhalt)</pre>
                   </div>
                 </template>
                 <template v-else>
@@ -567,8 +594,35 @@ body { margin:0 }
                       <div v-if="ctx.tags" class="mb-2">
                         <span v-for="(t, ti) in ctx.tags" :key="ti" class="font-mono text-[10.5px] font-medium py-[3px] px-[9px] rounded-full mr-1.5 inline-block" :style="tagStyle(t.s)">{{ t.text }}</span>
                       </div>
-                      <div class="bg-g-bg border border-g-bd rounded-lg p-3">
-                        <pre class="font-sans text-[12px] text-g-tx whitespace-pre-wrap leading-6 m-0">{{ text || '(Kein Inhalt)' }}</pre>
+                      <!-- Table Data View -->
+                      <div v-if="activeSession.tableData" class="mb-3">
+                        <div class="flex items-center justify-between mb-2">
+                          <span class="text-[10px] font-bold uppercase tracking-wide text-g-tx3">{{ activeSession.tableData.total }} Einträge</span>
+                        </div>
+                        <div class="bg-g-bg border border-g-bd rounded-lg overflow-auto" style="max-height:400px">
+                          <table class="w-full text-xs border-collapse">
+                            <thead>
+                              <tr class="bg-g-sf sticky top-0">
+                                <th v-for="col in activeSession.tableData.cols.slice(0, 8)" :key="col"
+                                    class="text-left text-[10px] font-bold uppercase tracking-wide text-g-tx3 px-3 py-2 border-b border-g-bd whitespace-nowrap">{{ col }}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr v-for="(row, ri) in activeSession.tableData.rows" :key="ri"
+                                  class="border-b border-g-bd/50 hover:bg-g-sf/30 transition-colors">
+                                <td v-for="col in activeSession.tableData.cols.slice(0, 8)" :key="col"
+                                    class="px-3 py-2 text-g-tx font-mono text-[11px] max-w-[250px] truncate"
+                                    :title="String(row[col] ?? '')">{{ row[col] ?? '' }}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <div v-if="text" class="bg-g-bg border border-g-bd rounded-lg p-3">
+                        <pre class="font-sans text-[12px] text-g-tx whitespace-pre-wrap leading-6 m-0">{{ text }}</pre>
+                      </div>
+                      <div v-if="!activeSession.tableData && !text" class="bg-g-bg border border-g-bd rounded-lg p-3">
+                        <pre class="font-sans text-[12px] text-g-tx whitespace-pre-wrap leading-6 m-0">(Kein Inhalt)</pre>
                       </div>
                     </template>
                     <template v-else>
@@ -846,16 +900,17 @@ function extractEditLabel(params, name) {
   return 'Generierter Inhalt';
 }
 
-function getApproveLabel(node) {
+function getApproveLabel(node, isReadOnly) {
+  if (isReadOnly) return 'Abschließen';
   const t = (node.type||'').toLowerCase();
   const n = (node.name||'').toLowerCase();
-  if (t.includes('jira')) return 'Nach Jira schreiben';
+  if (t.includes('jira') && (n.includes('create') || n.includes('update') || n.includes('write'))) return 'Nach Jira schreiben';
   if (t.includes('slack')) return 'An Slack senden';
   if (t.includes('email') || t.includes('gmail')) return 'E-Mail senden';
   if (t.includes('notion')) return 'In Notion speichern';
   if (t.includes('googlesheets')) return 'In Sheets schreiben';
   if (n.includes('datev')) return 'DATEV-Export';
-  return 'Ausführen';
+  return 'Abschließen';
 }
 
 // ══════════════════════════════════════════
@@ -996,10 +1051,12 @@ function parseN8nWorkflow(json) {
       }
       case 'human': break;
       case 'action': {
+        const op = (params.operation || params.resource || '').toLowerCase();
+        const isRead = op.includes('get') || op.includes('search') || op.includes('list') || op.includes('read') || op.includes('find');
         steps.push({
-          label: nodeName, type: 'review', title: `Freigabe: ${nodeName}`,
-          action: slugify(nodeName), approveLabel: getApproveLabel(node),
-          doneTitle: 'Abgeschlossen', doneText: `${nodeName} wurde ausgeführt.`
+          label: nodeName, type: 'review', title: isRead ? nodeName : `Freigabe: ${nodeName}`,
+          action: slugify(nodeName), approveLabel: getApproveLabel(node, isRead),
+          doneTitle: 'Abgeschlossen', doneText: isRead ? 'Daten geladen.' : `${nodeName} wurde ausgeführt.`
         });
         break;
       }
@@ -1079,6 +1136,7 @@ function createSession(wfIdx, data) {
     loading: false, done: data?.done || false,
     form: data?.form || {}, ctx: data?.ctx || {}, checks: data?.checks || [],
     text: data?.text || '', instr: data?.instr || '', logs: data?.logs || [],
+    tableData: data?.tableData || null,
     debug: data?.debug || [], showDebug: false, seqView: data?.seqView ?? false
   });
   if (s.id > _sessId) _sessId = s.id;
@@ -1098,6 +1156,7 @@ function saveState(workflows, sessions, activeTab, webhook, corsProxy, webhookMe
       ctx: JSON.parse(JSON.stringify(s.ctx || {})),
       checks: JSON.parse(JSON.stringify(s.checks || [])),
       text: s.text, instr: s.instr,
+      tableData: s.tableData ? JSON.parse(JSON.stringify(s.tableData)) : null,
       logs: JSON.parse(JSON.stringify(s.logs || [])),
       debug: JSON.parse(JSON.stringify(s.debug || [])),
       seqView: s.seqView
@@ -1197,6 +1256,45 @@ const app = createApp({
       if (s) s.logs = [{ t: ts(), m, ok }, ...s.logs].slice(0, 30);
     };
     const cnt = (st) => checks.value.filter(c => c.s === st).length;
+
+    // Parse webhook response into table data if it's an array
+    const parseTableData = (d) => {
+      // d is the raw response; could be an array or object with array
+      let items = null;
+      if (Array.isArray(d)) items = d;
+      else if (d && typeof d === 'object') {
+        // Look for first array property
+        for (const k of Object.keys(d)) {
+          if (Array.isArray(d[k]) && d[k].length > 0 && typeof d[k][0] === 'object') {
+            items = d[k]; break;
+          }
+        }
+      }
+      if (!items || items.length === 0) return null;
+      // Flatten nested objects one level (e.g. fields.summary)
+      const flat = items.map(item => {
+        const row = {};
+        for (const [k, v] of Object.entries(item)) {
+          if (v && typeof v === 'object' && !Array.isArray(v)) {
+            for (const [k2, v2] of Object.entries(v)) {
+              if (v2 === null || typeof v2 !== 'object') row[k2] = v2;
+            }
+          } else {
+            row[k] = v;
+          }
+        }
+        return row;
+      });
+      // Determine columns (skip arrays/objects, keep only scalar values)
+      const allKeys = new Set();
+      flat.forEach(r => Object.keys(r).forEach(k => {
+        if (r[k] === null || typeof r[k] !== 'object') allKeys.add(k);
+      }));
+      // Prioritize common useful columns first
+      const priority = ['key','summary','name','title','status','assignee','priority','type','updated','created','id','description'];
+      const cols = [...priority.filter(k => allKeys.has(k)), ...[...allKeys].filter(k => !priority.includes(k))];
+      return { cols, rows: flat, total: flat.length };
+    };
     const delay = () => new Promise(r => setTimeout(r, 400 + Math.random() * 500));
 
     const tagStyle = (s) => {
@@ -1375,7 +1473,7 @@ const app = createApp({
       s.step = 0; s.done = false;
       s.form = {}; s.ctx = {};
       s.checks = []; s.text = ''; s.instr = '';
-      s.debug = [];
+      s.tableData = null; s.debug = [];
     };
 
     const execInput = async () => {
@@ -1384,6 +1482,9 @@ const app = createApp({
       const d = await callWH(sd.value.action, { form: s.form });
       if (d.demo && wf.value.demo) s.ctx = wf.value.demo.ctx || {};
       else if (d.context) s.ctx = d.context;
+      // Check for table data in response
+      const td = parseTableData(d);
+      if (td) s.tableData = td;
       s.step++;
       const cs = wf.value.steps[s.step];
       if (cs?.type === 'check') {
@@ -1426,7 +1527,9 @@ const app = createApp({
     const approve = async () => {
       const s = activeSession.value; if (!s) return;
       s.loading = true;
-      await callWH(sd.value.action, { text: s.text, form: s.form, context: s.ctx });
+      const d = await callWH(sd.value.action, { text: s.text, form: s.form, context: s.ctx });
+      const td = parseTableData(d);
+      if (td) s.tableData = td;
       s.done = true; log('✓ Abgeschlossen');
       s.loading = false;
     };
