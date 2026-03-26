@@ -1053,7 +1053,7 @@ body { margin:0 }
             <div class="flex items-center gap-2">
               <span class="text-[10px] font-mono text-g-tx3 w-5 text-right">{{ si + 1 }}</span>
               <span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded"
-                    :class="st.type==='input'?'bg-green-900/30 text-g-gn':st.type==='check'?'bg-amber-900/30 text-g-am':st.type==='edit'?'bg-blue-900/30 text-g-ac':'bg-red-900/30 text-g-rd'">{{ st.type }}</span>
+                    :class="st.type==='input'?'bg-green-900/30 text-g-gn':st.type==='check'||st.type==='dor'?'bg-amber-900/30 text-g-am':st.type==='edit'?'bg-blue-900/30 text-g-ac':'bg-red-900/30 text-g-rd'">{{ st.type }}</span>
               <input :value="st.label" @input="st.label = $event.target.value"
                      class="text-xs text-g-tx flex-1 bg-transparent border-none outline-none px-1" />
               <span class="text-[10px] font-mono text-g-tx3">{{ st.action }}</span>
@@ -1061,6 +1061,28 @@ body { margin:0 }
                       class="text-[10px] text-g-ac hover:text-g-ac2 bg-transparent border-none cursor-pointer px-1">
                 {{ (st.fields||[]).length }} Felder <span v-icon="st._editFields?'chevron-up':'chevron-down'" data-size="10" style="display:inline-flex"></span>
               </button>
+              <button v-if="st.type==='dor'" @click="st._editActions = !st._editActions"
+                      class="text-[10px] text-g-am hover:text-g-am/80 bg-transparent border-none cursor-pointer px-1">
+                Actions <span v-icon="st._editActions?'chevron-up':'chevron-down'" data-size="10" style="display:inline-flex"></span>
+              </button>
+            </div>
+            <!-- Action Editor for dor steps -->
+            <div v-if="st.type==='dor' && st._editActions" class="mt-2 ml-7 space-y-1.5">
+              <div v-for="[key, label, desc] in [
+                ['loadAction','Laden','Ticket aus Jira holen'],
+                ['action','DoR Check','Kriterien prüfen'],
+                ['rewriteAction','Umschreiben','Text initial generieren'],
+                ['improveAction','Verbessern','Text mit AI verbessern'],
+                ['approveAction','Freigabe','Nach Jira zurückschreiben']
+              ]" :key="key" class="flex items-center gap-2 bg-g-bg rounded-lg px-2.5 py-1.5 border border-g-bd/50">
+                <span class="text-[10px] font-bold text-g-tx3 w-20 flex-shrink-0">{{ label }}</span>
+                <code class="text-[10px] text-g-tx3 flex-shrink-0">{{ wf.prefix }}_</code>
+                <input :value="st[key]||''" @input="st[key] = $event.target.value"
+                       :placeholder="key"
+                       class="flex-1 text-[10px] font-mono text-g-am bg-transparent border-none outline-none" />
+                <span class="text-[9px] text-g-tx3 opacity-60 flex-shrink-0">{{ desc }}</span>
+              </div>
+              <p class="text-[10px] text-g-tx3 opacity-60 mt-1">In n8n Switch: <code class="text-g-am" v-text="'{{ $json.body.action }}'"></code> → z.B. <code class="text-g-am">{{ wf.prefix }}_{{ st.action || 'check_dor' }}</code></p>
             </div>
             <!-- Field Editor for input steps -->
             <div v-if="st.type==='input' && st._editFields" class="mt-2 ml-7 space-y-2">
@@ -1430,7 +1452,7 @@ const DEMOS = [
     icon:'shield-check', color:'#34d399', prefix:'dor', webhook:'', webhookMethod:'POST', corsProxy:'',
     steps:[
       { label:'DoR prüfen & verbessern', type:'dor', title:'Definition of Ready',
-        loadAction:'load', action:'check_dor', improveAction:'improve', rewriteAction:'rewrite', approveAction:'approve' }
+        loadAction:'load', action:'check', improveAction:'improve', approveAction:'writejira' }
     ],
     demo:{
       form:{ ticket_key:'SCRUM-2' },
@@ -1481,6 +1503,20 @@ function saveState(workflows, sessions, activeTab, webhook, corsProxy, webhookMe
       const { _raw, ...rest } = w;
       return JSON.parse(JSON.stringify(rest));
     });
+    // Persist demo workflow overrides (webhook, corsProxy, name, etc.)
+    const demoOverrides = {};
+    for (let i = 0; i < DEMOS.length && i < workflows.value.length; i++) {
+      const w = workflows.value[i];
+      const d = DEMOS[i];
+      const ov = {};
+      if (w.webhook && w.webhook !== d.webhook) ov.webhook = w.webhook;
+      if (w.webhookMethod && w.webhookMethod !== d.webhookMethod) ov.webhookMethod = w.webhookMethod;
+      if (w.corsProxy && w.corsProxy !== d.corsProxy) ov.corsProxy = w.corsProxy;
+      if (w.name !== d.name) ov.name = w.name;
+      if (w.description !== d.description) ov.description = w.description;
+      if (w.prefix !== d.prefix) ov.prefix = w.prefix;
+      if (Object.keys(ov).length > 0) demoOverrides[d.id] = ov;
+    }
     const sessData = sessions.value.map(s => ({
       id: s.id, wfIdx: s.wfIdx, view: s.view, step: s.step, done: s.done,
       form: JSON.parse(JSON.stringify(s.form || {})),
@@ -1493,7 +1529,7 @@ function saveState(workflows, sessions, activeTab, webhook, corsProxy, webhookMe
       seqView: s.seqView
     }));
     localStorage.setItem(STORE_KEY, JSON.stringify({
-      imported, sessions: sessData, activeTab: activeTab.value,
+      imported, demoOverrides, sessions: sessData, activeTab: activeTab.value,
       webhook: webhook.value, corsProxy: corsProxy.value, webhookMethod: webhookMethod.value
     }));
   } catch (e) { console.error('g3nui saveState failed:', e); }
@@ -1509,7 +1545,11 @@ function loadState() {
 const app = createApp({
   setup() {
     const stored = loadState();
-    const workflows = ref([...DEMOS, ...(stored?.imported || [])]);
+    const demos = DEMOS.map(d => {
+      const ov = stored?.demoOverrides?.[d.id];
+      return ov ? { ...d, ...ov } : { ...d };
+    });
+    const workflows = ref([...demos, ...(stored?.imported || [])]);
     const sessions = ref(
       stored?.sessions?.length
         ? stored.sessions.map(d => createSession(d.wfIdx, d))
