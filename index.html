@@ -65,6 +65,7 @@ body { margin:0 }
 .spinner-lg { display:inline-block; width:24px; height:24px; border:2px solid transparent; border-top-color:currentColor; border-radius:50%; animation:spin .6s linear infinite }
 .g-swatch { width:14px; height:14px; border-radius:9999px; transition:all .15s; cursor:pointer; border:0; padding:0; flex-shrink:0 }
 .g-swatch:hover { transform:scale(1.25) }
+.g-tab-close:hover { color:var(--g-rd) }
 </style>
 </head>
 <body class="bg-g-bg text-g-tx font-sans min-h-screen">
@@ -86,21 +87,28 @@ body { margin:0 }
       <div class="px-2.5 flex-1">
         <div class="text-[10px] font-bold uppercase tracking-wider text-g-tx3 mb-2.5 px-1">Workflows</div>
         <div v-for="(w, i) in workflows" :key="w.id + i"
-             @click="switchWf(i)"
+             @click="newSession(i)"
              class="flex items-center gap-2 py-[7px] px-2.5 rounded-lg cursor-pointer mb-0.5 border transition-colors"
-             :class="i === wfIdx ? 'border-g-ac/20 bg-g-ac/[0.08]' : 'border-transparent hover:bg-white/[0.02]'">
+             :class="activeWfIdx === i ? 'border-g-ac/20 bg-g-ac/[0.08]' : 'border-transparent hover:bg-white/[0.02]'">
           <span class="w-[26px] h-[26px] rounded-md flex items-center justify-center"
                 :style="{ background: w.color+'22', color: w.color }"><span v-icon="w.icon" style="display:inline-flex"></span></span>
-          <div>
-            <div class="text-xs" :class="i === wfIdx ? 'font-semibold text-g-ac' : 'font-medium text-g-tx'">{{ w.name }}</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-xs truncate" :class="activeWfIdx === i ? 'font-semibold text-g-ac' : 'font-medium text-g-tx'">{{ w.name }}</div>
             <div class="text-[10px] text-g-tx3">{{ (w.steps||[]).length }} Schritte</div>
           </div>
         </div>
 
-        <button @click="view = view === 'import' ? 'run' : 'import'"
-                class="w-full mt-3 py-2 px-2.5 text-[11.5px] font-semibold rounded-lg flex items-center justify-center gap-1.5 border border-dashed transition-colors cursor-pointer bg-transparent"
-                :class="view === 'import' ? 'border-g-ac text-g-ac' : 'border-g-bd text-g-tx3 hover:border-g-tx3'">
-          <span v-icon="'zap'" style="display:inline-flex"></span> n8n Workflow importieren
+        <!-- New session button -->
+        <button @click="newSession(0)"
+                class="w-full mt-2 py-[7px] px-2.5 rounded-lg flex items-center justify-center gap-1.5 border border-dashed transition-colors cursor-pointer bg-transparent border-g-bd text-g-tx3 hover:border-g-tx3 hover:text-g-tx2">
+          <span v-icon="'circle-plus'" style="display:inline-flex" data-size="15"></span>
+          <span class="text-[11px] font-semibold">Neue Session</span>
+        </button>
+
+        <button @click="toggleImport"
+                class="w-full mt-1.5 py-[7px] px-2.5 text-[11px] font-semibold rounded-lg flex items-center justify-center gap-1.5 border border-dashed transition-colors cursor-pointer bg-transparent"
+                :class="activeSession?.view === 'import' ? 'border-g-ac text-g-ac' : 'border-g-bd text-g-tx3 hover:border-g-tx3'">
+          <span v-icon="'zap'" style="display:inline-flex"></span> n8n importieren
         </button>
       </div>
 
@@ -129,10 +137,37 @@ body { margin:0 }
     </aside>
 
     <!-- ══ MAIN ══ -->
-    <main class="flex-1 overflow-y-auto">
+    <main class="flex-1 flex flex-col overflow-hidden">
+
+      <!-- ═══ TAB BAR ═══ -->
+      <div v-if="sessions.length > 0" class="flex items-center bg-g-bg2 border-b border-g-bd overflow-x-auto flex-shrink-0" style="min-height:36px">
+        <div v-for="(sess, si) in sessions" :key="sess.id"
+             @click="activeTab = si"
+             class="flex items-center gap-1.5 px-3.5 py-[7px] text-[11.5px] font-medium cursor-pointer border-r border-g-bd transition-colors flex-shrink-0 select-none"
+             :class="si === activeTab ? 'bg-g-sf text-g-tx' : 'text-g-tx3 hover:text-g-tx2 hover:bg-g-sf/50'"
+             :style="si === activeTab ? 'box-shadow:inset 0 2px 0 var(--g-ac)' : ''">
+          <span v-icon="workflows[sess.wfIdx]?.icon || 'zap'" data-size="12" style="display:inline-flex"></span>
+          <span class="max-w-[120px] truncate">{{ workflows[sess.wfIdx]?.name || 'Workflow' }}</span>
+          <span v-if="sess.done" class="text-g-gn text-[9px]">&#10003;</span>
+          <button @click.stop="closeSession(si)"
+                  class="ml-1 text-g-tx3 hover:text-g-rd transition-colors bg-transparent border-none cursor-pointer p-0 leading-none"
+                  style="font-size:14px">&times;</button>
+        </div>
+      </div>
+
+      <!-- ═══ EMPTY STATE ═══ -->
+      <div v-if="sessions.length === 0" class="flex-1 flex items-center justify-center text-g-tx3">
+        <div class="text-center">
+          <div class="mb-3 flex justify-center"><span v-icon="'layout-grid'" data-size="32" style="display:inline-flex"></span></div>
+          <p class="text-sm font-medium mb-1">Keine Sessions</p>
+          <p class="text-xs">Klicke auf einen Workflow oder <b>Neue Session</b></p>
+        </div>
+      </div>
+
+      <div v-if="activeSession" class="flex-1 overflow-y-auto">
 
       <!-- ═══ IMPORT VIEW ═══ -->
-      <div v-if="view === 'import'" class="p-7">
+      <div v-if="activeSession?.view === 'import'" class="p-7">
         <h2 class="text-base font-bold mb-1">n8n Workflow importieren</h2>
         <p class="text-[13px] text-g-tx2 mb-5">
           Exportiere deinen n8n Workflow als JSON (⋯ → Download) und füge ihn hier ein.
@@ -203,7 +238,7 @@ body { margin:0 }
       </div>
 
       <!-- ═══ RUN VIEW ═══ -->
-      <template v-if="view === 'run'">
+      <template v-if="activeSession?.view === 'run'">
         <div class="px-7 py-4 border-b border-g-bd flex items-center justify-between">
           <div>
             <span class="text-[15px] font-bold">{{ wf.name }}</span>
@@ -211,7 +246,7 @@ body { margin:0 }
           </div>
           <div class="flex gap-2">
             <button v-if="step > 0" @click="reset" class="btn-ghost"><span v-icon="'rotate-ccw'" style="display:inline-flex"></span> Neustart</button>
-            <button @click="view = 'inspect'" class="btn-ghost text-[11px]"><span v-icon="'braces'" style="display:inline-flex"></span> JSON</button>
+            <button @click="activeSession.view = 'inspect'" class="btn-ghost text-[11px]"><span v-icon="'braces'" style="display:inline-flex"></span> JSON</button>
           </div>
         </div>
 
@@ -398,15 +433,16 @@ body { margin:0 }
       </template>
 
       <!-- ═══ INSPECT VIEW ═══ -->
-      <div v-if="view === 'inspect'" class="p-7">
+      <div v-if="activeSession?.view === 'inspect'" class="p-7">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-base font-bold">Workflow-Config: {{ wf.name }}</h2>
-          <button @click="view = 'run'" class="btn-sec"><span v-icon="'arrow-left'" style="display:inline-flex"></span> Zurück</button>
+          <button @click="activeSession.view='run'" class="btn-sec"><span v-icon="'arrow-left'" style="display:inline-flex"></span> Zurück</button>
         </div>
         <pre class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2.5 text-xs text-g-tx font-mono whitespace-pre-wrap leading-relaxed overflow-auto"
              style="min-height:300px">{{ JSON.stringify(wf, null, 2) }}</pre>
       </div>
 
+      </div><!-- /activeSession -->
     </main>
   </div>
 </div>
@@ -739,23 +775,57 @@ const DEMOS = [
 // ══════════════════════════════════════════
 //  VUE APP
 // ══════════════════════════════════════════
-const { createApp, ref, computed } = Vue;
+const { createApp, ref, reactive, computed, watch, watchEffect } = Vue;
+
+const STORE_KEY = 'g3nui-state';
+
+let _sessId = 0;
+function createSession(wfIdx, data) {
+  const s = reactive({
+    id: data?.id || ++_sessId, wfIdx, view: data?.view || 'run', step: data?.step || 0,
+    loading: false, done: data?.done || false,
+    form: data?.form || {}, ctx: data?.ctx || {}, checks: data?.checks || [],
+    text: data?.text || '', instr: data?.instr || '', logs: data?.logs || []
+  });
+  if (s.id > _sessId) _sessId = s.id;
+  return s;
+}
+
+function saveState(workflows, sessions, activeTab, webhook) {
+  try {
+    // Only persist imported workflows (beyond DEMOS)
+    const imported = workflows.value.slice(DEMOS.length).map(w => {
+      const { _raw, ...rest } = w; return rest;
+    });
+    const sessData = sessions.value.map(s => ({
+      id: s.id, wfIdx: s.wfIdx, view: s.view, step: s.step, done: s.done,
+      form: s.form, ctx: s.ctx, checks: s.checks, text: s.text, instr: s.instr, logs: s.logs
+    }));
+    localStorage.setItem(STORE_KEY, JSON.stringify({
+      imported, sessions: sessData, activeTab: activeTab.value, webhook: webhook.value
+    }));
+  } catch {}
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
 
 const app = createApp({
   setup() {
-    const workflows = ref([...DEMOS]);
-    const wfIdx = ref(0);
-    const view = ref('run');
-    const step = ref(0);
-    const loading = ref(false);
-    const done = ref(false);
-    const form = ref({});
-    const ctx = ref({});
-    const checks = ref([]);
-    const text = ref('');
-    const instr = ref('');
-    const logs = ref([]);
-    const webhook = ref('');
+    const stored = loadState();
+    const workflows = ref([...DEMOS, ...(stored?.imported || [])]);
+    const sessions = ref(
+      stored?.sessions?.length
+        ? stored.sessions.map(d => createSession(d.wfIdx, d))
+        : [createSession(0)]
+    );
+    const activeTab = ref(stored?.activeTab ?? 0);
+    if (activeTab.value >= sessions.value.length) activeTab.value = 0;
+    const webhook = ref(stored?.webhook || '');
     const showCfg = ref(false);
     const importJson = ref('');
     const importErr = ref('');
@@ -764,12 +834,64 @@ const app = createApp({
     const themes = THEMES;
     const applyTheme = (id) => { setTheme(id); currentTheme.value = id; };
 
-    const wf = computed(() => workflows.value[wfIdx.value] || DEMOS[0]);
-    const sd = computed(() => (wf.value.steps || [])[step.value] || {});
+    // Active session (reactive proxy)
+    const activeSession = computed(() => sessions.value[activeTab.value] || null);
+    const activeWfIdx = computed(() => activeSession.value?.wfIdx ?? 0);
+
+    // Delegating computed: wf, sd, step, loading, done, etc. read from active session
+    const wf = computed(() => {
+      const s = activeSession.value;
+      return s ? (workflows.value[s.wfIdx] || DEMOS[0]) : DEMOS[0];
+    });
+    const sd = computed(() => {
+      const s = activeSession.value;
+      return s ? ((wf.value.steps || [])[s.step] || {}) : {};
+    });
+
+    // Expose session fields as computed get/set so template bindings work
+    const step = computed({
+      get: () => activeSession.value?.step ?? 0,
+      set: (v) => { if (activeSession.value) activeSession.value.step = v; }
+    });
+    const loading = computed({
+      get: () => activeSession.value?.loading ?? false,
+      set: (v) => { if (activeSession.value) activeSession.value.loading = v; }
+    });
+    const done = computed({
+      get: () => activeSession.value?.done ?? false,
+      set: (v) => { if (activeSession.value) activeSession.value.done = v; }
+    });
+    const form = computed({
+      get: () => activeSession.value?.form ?? {},
+      set: (v) => { if (activeSession.value) activeSession.value.form = v; }
+    });
+    const ctx = computed({
+      get: () => activeSession.value?.ctx ?? {},
+      set: (v) => { if (activeSession.value) activeSession.value.ctx = v; }
+    });
+    const checks = computed({
+      get: () => activeSession.value?.checks ?? [],
+      set: (v) => { if (activeSession.value) activeSession.value.checks = v; }
+    });
+    const text = computed({
+      get: () => activeSession.value?.text ?? '',
+      set: (v) => { if (activeSession.value) activeSession.value.text = v; }
+    });
+    const instr = computed({
+      get: () => activeSession.value?.instr ?? '',
+      set: (v) => { if (activeSession.value) activeSession.value.instr = v; }
+    });
+    const logs = computed({
+      get: () => activeSession.value?.logs ?? [],
+      set: (v) => { if (activeSession.value) activeSession.value.logs = v; }
+    });
 
     const ts = () => new Date().toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-    const log = (m, ok=true) => { logs.value = [{ t: ts(), m, ok }, ...logs.value].slice(0, 30); };
-    const cnt = (s) => checks.value.filter(c => c.s === s).length;
+    const log = (m, ok=true) => {
+      const s = activeSession.value;
+      if (s) s.logs = [{ t: ts(), m, ok }, ...s.logs].slice(0, 30);
+    };
+    const cnt = (st) => checks.value.filter(c => c.s === st).length;
     const delay = () => new Promise(r => setTimeout(r, 400 + Math.random() * 500));
 
     const tagStyle = (s) => {
@@ -793,69 +915,93 @@ const app = createApp({
       } catch (e) { log(`${full} FEHLER: ${e.message}`, false); return { demo: true }; }
     };
 
-    const reset = () => {
-      step.value = 0; done.value = false;
-      form.value = {}; ctx.value = {};
-      checks.value = []; text.value = ''; instr.value = '';
+    // Session management
+    const newSession = (wfIdx) => {
+      const sess = createSession(wfIdx);
+      sessions.value.push(sess);
+      activeTab.value = sessions.value.length - 1;
     };
 
-    const switchWf = (i) => { wfIdx.value = i; reset(); view.value = 'run'; };
+    const closeSession = (idx) => {
+      sessions.value.splice(idx, 1);
+      if (activeTab.value >= sessions.value.length) activeTab.value = Math.max(0, sessions.value.length - 1);
+    };
+
+    const toggleImport = () => {
+      const s = activeSession.value;
+      if (!s) { newSession(0); return; }
+      s.view = s.view === 'import' ? 'run' : 'import';
+    };
+
+    const reset = () => {
+      const s = activeSession.value;
+      if (!s) return;
+      s.step = 0; s.done = false;
+      s.form = {}; s.ctx = {};
+      s.checks = []; s.text = ''; s.instr = '';
+    };
 
     const execInput = async () => {
-      loading.value = true;
-      const d = await callWH(sd.value.action, { form: form.value });
-      if (d.demo && wf.value.demo) ctx.value = wf.value.demo.ctx || {};
-      else if (d.context) ctx.value = d.context;
-      step.value++;
-      const cs = wf.value.steps[step.value];
+      const s = activeSession.value; if (!s) return;
+      s.loading = true;
+      const d = await callWH(sd.value.action, { form: s.form });
+      if (d.demo && wf.value.demo) s.ctx = wf.value.demo.ctx || {};
+      else if (d.context) s.ctx = d.context;
+      s.step++;
+      const cs = wf.value.steps[s.step];
       if (cs?.type === 'check') {
-        const d2 = await callWH(cs.action, { form: form.value, context: wf.value.demo?.ctx || ctx.value });
-        if (d2.demo && wf.value.demo) checks.value = wf.value.demo.checks || [];
-        else if (d2.check_results) checks.value = d2.check_results;
+        const d2 = await callWH(cs.action, { form: s.form, context: wf.value.demo?.ctx || s.ctx });
+        if (d2.demo && wf.value.demo) s.checks = wf.value.demo.checks || [];
+        else if (d2.check_results) s.checks = d2.check_results;
       }
-      loading.value = false;
+      s.loading = false;
     };
 
     const execCheck = async () => {
-      loading.value = true;
-      const d = await callWH(sd.value.action, { form: form.value, context: ctx.value });
-      if (d.demo && wf.value.demo) checks.value = wf.value.demo.checks || [];
-      else if (d.check_results) checks.value = d.check_results;
-      loading.value = false;
+      const s = activeSession.value; if (!s) return;
+      s.loading = true;
+      const d = await callWH(sd.value.action, { form: s.form, context: s.ctx });
+      if (d.demo && wf.value.demo) s.checks = wf.value.demo.checks || [];
+      else if (d.check_results) s.checks = d.check_results;
+      s.loading = false;
     };
 
     const goEdit = async () => {
-      step.value++;
-      loading.value = true;
-      const es = wf.value.steps[step.value];
-      const d = await callWH(es.action, { form: form.value, context: ctx.value, checks: checks.value });
-      if (d.demo && wf.value.demo) text.value = wf.value.demo.text || '';
-      else if (d.text) text.value = d.text;
-      loading.value = false;
+      const s = activeSession.value; if (!s) return;
+      s.step++;
+      s.loading = true;
+      const es = wf.value.steps[s.step];
+      const d = await callWH(es.action, { form: s.form, context: s.ctx, checks: s.checks });
+      if (d.demo && wf.value.demo) s.text = wf.value.demo.text || '';
+      else if (d.text) s.text = d.text;
+      s.loading = false;
     };
 
     const improve = async () => {
-      loading.value = true;
-      const d = await callWH(sd.value.improveAction || 'improve', { text: text.value, instructions: instr.value, context: ctx.value });
-      if (d.demo) text.value += '\n\n— Verbesserung —';
-      else if (d.text) text.value = d.text;
-      loading.value = false;
+      const s = activeSession.value; if (!s) return;
+      s.loading = true;
+      const d = await callWH(sd.value.improveAction || 'improve', { text: s.text, instructions: s.instr, context: s.ctx });
+      if (d.demo) s.text += '\n\n— Verbesserung —';
+      else if (d.text) s.text = d.text;
+      s.loading = false;
     };
 
     const approve = async () => {
-      loading.value = true;
-      await callWH(sd.value.action, { text: text.value, form: form.value, context: ctx.value });
-      done.value = true; log('✓ Abgeschlossen');
-      loading.value = false;
+      const s = activeSession.value; if (!s) return;
+      s.loading = true;
+      await callWH(sd.value.action, { text: s.text, form: s.form, context: s.ctx });
+      s.done = true; log('✓ Abgeschlossen');
+      s.loading = false;
     };
 
-    const loadDemo = () => { if (wf.value.demo?.form) form.value = { ...wf.value.demo.form }; };
+    const loadDemo = () => { if (wf.value.demo?.form && activeSession.value) activeSession.value.form = { ...wf.value.demo.form }; };
 
     const goBackToEdit = () => {
-      for (let i = step.value - 1; i >= 0; i--) {
-        if (wf.value.steps[i].type === 'edit') { step.value = i; return; }
+      const s = activeSession.value; if (!s) return;
+      for (let i = s.step - 1; i >= 0; i--) {
+        if (wf.value.steps[i].type === 'edit') { s.step = i; return; }
       }
-      step.value--;
+      s.step--;
     };
 
     const handleImport = () => {
@@ -868,8 +1014,8 @@ const app = createApp({
       if (!importPreview.value) return;
       const name = importPreview.value.name;
       workflows.value.push(importPreview.value);
-      wfIdx.value = workflows.value.length - 1;
-      reset(); view.value = 'run';
+      const idx = workflows.value.length - 1;
+      newSession(idx);
       importJson.value = ''; importPreview.value = null;
       log(`Workflow "${name}" importiert ✓`);
     };
@@ -882,11 +1028,21 @@ const app = createApp({
       reader.readAsText(file);
     };
 
+    // Auto-save to localStorage (debounced)
+    let _saveTimer = null;
+    const debouncedSave = () => {
+      if (_saveTimer) clearTimeout(_saveTimer);
+      _saveTimer = setTimeout(() => saveState(workflows, sessions, activeTab, webhook), 300);
+    };
+    watch([sessions, activeTab, webhook, workflows], debouncedSave, { deep: true });
+
     return {
-      workflows, wfIdx, view, step, loading, done, form, ctx, checks, text, instr, logs,
+      workflows, sessions, activeTab, activeSession, activeWfIdx,
+      step, loading, done, form, ctx, checks, text, instr, logs,
       webhook, showCfg, importJson, importErr, importPreview, currentTheme, themes, applyTheme,
       wf, sd,
-      cnt, tagStyle, switchWf, reset, execInput, execCheck, goEdit, improve, approve,
+      cnt, tagStyle, newSession, closeSession, toggleImport, reset,
+      execInput, execCheck, goEdit, improve, approve,
       loadDemo, goBackToEdit, handleImport, confirmImport, handleFile
     };
   }
