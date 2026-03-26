@@ -88,7 +88,7 @@ body { margin:0 }
         <div class="text-[10px] font-bold uppercase tracking-wider text-g-tx3 mb-2.5 px-1">Workflows</div>
         <div v-for="(w, i) in workflows" :key="w.id + i"
              @click="newSession(i)"
-             class="flex items-center gap-2 py-[7px] px-2.5 rounded-lg cursor-pointer mb-0.5 border transition-colors"
+             class="group flex items-center gap-2 py-[7px] px-2.5 rounded-lg cursor-pointer mb-0.5 border transition-colors"
              :class="activeWfIdx === i ? 'border-g-ac/20 bg-g-ac/[0.08]' : 'border-transparent hover:bg-white/[0.02]'">
           <span class="w-[26px] h-[26px] rounded-md flex items-center justify-center"
                 :style="{ background: w.color+'22', color: w.color }"><span v-icon="w.icon" style="display:inline-flex"></span></span>
@@ -96,6 +96,8 @@ body { margin:0 }
             <div class="text-xs truncate" :class="activeWfIdx === i ? 'font-semibold text-g-ac' : 'font-medium text-g-tx'">{{ w.name }}</div>
             <div class="text-[10px] text-g-tx3">{{ (w.steps||[]).length }} Schritte</div>
           </div>
+          <button v-if="!w.demo" @click.stop="deleteWorkflow(i)" class="opacity-0 group-hover:opacity-100 text-g-tx3 hover:text-g-rd transition-opacity p-0.5"
+                  title="Workflow löschen"><span v-icon="'x'" data-size="13" style="display:inline-flex"></span></button>
         </div>
 
         <!-- New session button -->
@@ -126,12 +128,23 @@ body { margin:0 }
       <div class="px-2.5 pt-3 border-t border-g-bd">
         <button @click="showCfg = !showCfg"
                 class="w-full text-[11px] font-semibold py-[7px] px-2.5 text-left text-g-tx3 bg-transparent border-none cursor-pointer hover:text-g-tx2">
-          <span v-icon="'settings'" style="display:inline-flex;vertical-align:-2px"></span> Webhook
+          <span v-icon="'settings'" style="display:inline-flex;vertical-align:-2px"></span> Globaler Webhook
         </button>
         <div v-if="showCfg" class="mt-2 p-2.5 bg-g-sf border border-g-bd rounded-lg">
+          <p class="text-[10px] text-g-tx3 mb-2 opacity-70">Fallback für Workflows ohne eigene Webhook-URL</p>
           <label class="block text-[10px] font-bold uppercase tracking-wide text-g-tx3 mb-1">Webhook URL</label>
-          <input v-model="webhook" placeholder="https://n8n.example.com/webhook/..."
+          <div class="flex gap-1.5">
+            <select v-model="webhookMethod"
+                    class="bg-g-bg border border-g-bd rounded-[7px] px-2 py-2 text-xs text-g-tx font-mono outline-none w-20 flex-shrink-0">
+              <option>POST</option><option>GET</option><option>PUT</option>
+            </select>
+            <input v-model="webhook" placeholder="https://n8n.example.com/webhook/..."
+                   class="flex-1 bg-g-bg border border-g-bd rounded-[7px] px-3 py-2 text-xs text-g-tx font-mono outline-none transition-colors" />
+          </div>
+          <label class="block text-[10px] font-bold uppercase tracking-wide text-g-tx3 mb-1 mt-2">CORS Proxy <span class="font-normal opacity-60">(optional, für file:// Nutzung)</span></label>
+          <input v-model="corsProxy" placeholder="http://localhost:8090"
                  class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2 text-xs text-g-tx font-mono outline-none transition-colors" />
+          <p v-if="corsProxy" class="text-[10px] text-g-tx3 mt-1 opacity-70">Requests gehen über: {{ corsProxy }}/{{ webhook || '...' }}</p>
         </div>
       </div>
     </aside>
@@ -256,7 +269,7 @@ body { margin:0 }
                     :class="activeSession.showDebug ? 'text-g-am' : ''">
               <span v-icon="'bug'" style="display:inline-flex"></span> Debug
             </button>
-            <button @click="activeSession.view = 'inspect'" class="btn-ghost text-[11px]"><span v-icon="'braces'" style="display:inline-flex"></span> JSON</button>
+            <button @click="activeSession.view = 'inspect'" class="btn-ghost text-[11px]"><span v-icon="'settings'" style="display:inline-flex"></span> Einstellungen</button>
           </div>
         </div>
 
@@ -630,14 +643,93 @@ body { margin:0 }
         </div>
       </template>
 
-      <!-- ═══ INSPECT VIEW ═══ -->
+      <!-- ═══ INSPECT VIEW (Workflow Settings) ═══ -->
       <div v-if="activeSession?.view === 'inspect'" class="p-7">
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-base font-bold">Workflow-Config: {{ wf.name }}</h2>
+          <h2 class="text-base font-bold">Workflow-Einstellungen: {{ wf.name }}</h2>
           <button @click="activeSession.view='run'" class="btn-sec"><span v-icon="'arrow-left'" style="display:inline-flex"></span> Zurück</button>
         </div>
-        <pre class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2.5 text-xs text-g-tx font-mono whitespace-pre-wrap leading-relaxed overflow-auto"
-             style="min-height:300px">{{ JSON.stringify(wf, null, 2) }}</pre>
+
+        <!-- Webhook Settings per Workflow -->
+        <div class="bg-g-sf border border-g-bd rounded-lg p-4 mb-4">
+          <h3 class="text-xs font-bold uppercase tracking-wide text-g-tx3 mb-3">Webhook-Verbindung</h3>
+          <div class="space-y-3">
+            <div>
+              <label class="block text-[10px] font-bold uppercase tracking-wide text-g-tx3 mb-1">Webhook URL</label>
+              <div class="flex gap-1.5">
+                <select :value="wf.webhookMethod || 'POST'" @change="wf.webhookMethod = $event.target.value"
+                        class="bg-g-bg border border-g-bd rounded-[7px] px-2 py-2 text-xs text-g-tx font-mono outline-none w-20 flex-shrink-0">
+                  <option>POST</option><option>GET</option><option>PUT</option>
+                </select>
+                <input :value="wf.webhook || ''" @input="wf.webhook = $event.target.value"
+                       placeholder="https://n8n.example.com/webhook/..."
+                       class="flex-1 bg-g-bg border border-g-bd rounded-[7px] px-3 py-2 text-xs text-g-tx font-mono outline-none" />
+              </div>
+              <p class="text-[10px] text-g-tx3 mt-1 opacity-70" v-if="!wf.webhook && webhook">Fallback: globale Webhook-URL ({{ webhook }})</p>
+              <p class="text-[10px] text-g-am mt-1" v-if="!wf.webhook && !webhook">Kein Webhook konfiguriert — läuft im Demo-Modus</p>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase tracking-wide text-g-tx3 mb-1">CORS Proxy <span class="font-normal opacity-60">(optional)</span></label>
+              <input :value="wf.corsProxy || ''" @input="wf.corsProxy = $event.target.value"
+                     placeholder="http://localhost:8090"
+                     class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2 text-xs text-g-tx font-mono outline-none" />
+              <p class="text-[10px] text-g-tx3 mt-1 opacity-70" v-if="!wf.corsProxy && corsProxy">Fallback: globaler Proxy ({{ corsProxy }})</p>
+            </div>
+            <!-- Connection Test -->
+            <div>
+              <button @click="testConnection" class="btn-sec text-xs" :disabled="connTest.loading">
+                <span v-icon="'wifi'" style="display:inline-flex"></span>
+                {{ connTest.loading ? 'Teste...' : 'Verbindung testen' }}
+              </button>
+              <div v-if="connTest.result" class="mt-2 p-3 rounded-lg border text-xs font-mono whitespace-pre-wrap"
+                   :class="connTest.result.ok ? 'bg-green-900/20 border-g-gn/30 text-g-gn' : 'bg-red-900/20 border-g-rd/30 text-g-rd'">
+                <div class="font-bold mb-1">{{ connTest.result.ok ? 'Verbindung OK' : 'Fehler' }}</div>
+                <div v-for="(line, li) in connTest.result.details" :key="li">{{ line }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Workflow Info -->
+        <div class="bg-g-sf border border-g-bd rounded-lg p-4 mb-4">
+          <h3 class="text-xs font-bold uppercase tracking-wide text-g-tx3 mb-3">Workflow-Info</h3>
+          <div class="space-y-3">
+            <div>
+              <label class="block text-[10px] font-bold uppercase tracking-wide text-g-tx3 mb-1">Name</label>
+              <input :value="wf.name" @input="wf.name = $event.target.value"
+                     class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2 text-xs text-g-tx font-mono outline-none" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase tracking-wide text-g-tx3 mb-1">Prefix <span class="font-normal opacity-60">(Action-Prefix für Webhook)</span></label>
+              <input :value="wf.prefix" @input="wf.prefix = $event.target.value"
+                     class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2 text-xs text-g-tx font-mono outline-none" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase tracking-wide text-g-tx3 mb-1">Beschreibung</label>
+              <input :value="wf.description" @input="wf.description = $event.target.value"
+                     class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2 text-xs text-g-tx font-mono outline-none" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Steps -->
+        <div class="bg-g-sf border border-g-bd rounded-lg p-4 mb-4">
+          <h3 class="text-xs font-bold uppercase tracking-wide text-g-tx3 mb-3">Schritte ({{ (wf.steps||[]).length }})</h3>
+          <div v-for="(st, si) in (wf.steps||[])" :key="si" class="flex items-center gap-2 py-1.5 border-b border-g-bd last:border-0">
+            <span class="text-[10px] font-mono text-g-tx3 w-5 text-right">{{ si + 1 }}</span>
+            <span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded"
+                  :class="st.type==='input'?'bg-green-900/30 text-g-gn':st.type==='check'?'bg-amber-900/30 text-g-am':st.type==='edit'?'bg-blue-900/30 text-g-ac':'bg-red-900/30 text-g-rd'">{{ st.type }}</span>
+            <span class="text-xs text-g-tx flex-1">{{ st.label }}</span>
+            <span class="text-[10px] font-mono text-g-tx3">{{ st.action }}</span>
+          </div>
+        </div>
+
+        <!-- Raw JSON (collapsed) -->
+        <details class="bg-g-sf border border-g-bd rounded-lg">
+          <summary class="px-4 py-3 text-xs font-bold uppercase tracking-wide text-g-tx3 cursor-pointer select-none">Raw JSON</summary>
+          <pre class="px-4 pb-4 text-xs text-g-tx font-mono whitespace-pre-wrap leading-relaxed overflow-auto"
+               style="max-height:400px">{{ JSON.stringify(wf, null, 2) }}</pre>
+        </details>
       </div>
 
       </div><!-- /activeSession -->
@@ -792,6 +884,7 @@ function parseN8nWorkflow(json) {
   const classify = (n) => {
     const t = (n.type || '').toLowerCase();
     const name = (n.name || '').toLowerCase();
+    if (t.includes('respondtowebhook') || t.includes('respond-to-webhook') || name.includes('respond to webhook')) return 'util';
     if (t.includes('webhook') || t.includes('trigger') || t.includes('formtrigger') || t.includes('form-trigger')) return 'trigger';
     if (t.includes('form') || t.includes('n8n-nodes-base.form')) return 'input';
     if (t.includes('if') || t.includes('switch') || t.includes('compare') || t.includes('filter')) return 'check';
@@ -931,6 +1024,7 @@ function parseN8nWorkflow(json) {
     id: `n8n_${Date.now()}`, name: wfName,
     description: `Importiert aus n8n (${nodes.length} Nodes)`,
     icon: 'zap', color: T.cy, prefix: slugify(wfName),
+    webhook: '', webhookMethod: 'POST', corsProxy: '',
     steps: deduped, webhookUrl, nodeCount: nodes.length, _raw: data
   };
 }
@@ -941,7 +1035,7 @@ function parseN8nWorkflow(json) {
 const DEMOS = [
   {
     id:'jira-dor', name:'Jira DoR Review', description:'Tickets gegen Definition of Ready prüfen',
-    icon:'target', color:'#818cf8', prefix:'jira_dor',
+    icon:'target', color:'#818cf8', prefix:'jira_dor', webhook:'', webhookMethod:'POST', corsProxy:'',
     steps:[
       { label:'Ticket laden', type:'input', title:'Jira Ticket-Key', actionLabel:'Laden', action:'load',
         fields:[{key:'ticket_key',label:'Ticket-Key',type:'text',placeholder:'PROJ-1234'}] },
@@ -991,21 +1085,28 @@ function createSession(wfIdx, data) {
   return s;
 }
 
-function saveState(workflows, sessions, activeTab, webhook) {
+function saveState(workflows, sessions, activeTab, webhook, corsProxy, webhookMethod) {
   try {
     // Only persist imported workflows (beyond DEMOS)
     const imported = workflows.value.slice(DEMOS.length).map(w => {
-      const { _raw, ...rest } = w; return rest;
+      const { _raw, ...rest } = w;
+      return JSON.parse(JSON.stringify(rest));
     });
     const sessData = sessions.value.map(s => ({
       id: s.id, wfIdx: s.wfIdx, view: s.view, step: s.step, done: s.done,
-      form: s.form, ctx: s.ctx, checks: s.checks, text: s.text, instr: s.instr, logs: s.logs,
-      debug: s.debug, seqView: s.seqView
+      form: JSON.parse(JSON.stringify(s.form || {})),
+      ctx: JSON.parse(JSON.stringify(s.ctx || {})),
+      checks: JSON.parse(JSON.stringify(s.checks || [])),
+      text: s.text, instr: s.instr,
+      logs: JSON.parse(JSON.stringify(s.logs || [])),
+      debug: JSON.parse(JSON.stringify(s.debug || [])),
+      seqView: s.seqView
     }));
     localStorage.setItem(STORE_KEY, JSON.stringify({
-      imported, sessions: sessData, activeTab: activeTab.value, webhook: webhook.value
+      imported, sessions: sessData, activeTab: activeTab.value,
+      webhook: webhook.value, corsProxy: corsProxy.value, webhookMethod: webhookMethod.value
     }));
-  } catch {}
+  } catch (e) { console.error('g3nui saveState failed:', e); }
 }
 
 function loadState() {
@@ -1027,7 +1128,10 @@ const app = createApp({
     const activeTab = ref(stored?.activeTab ?? 0);
     if (activeTab.value >= sessions.value.length) activeTab.value = 0;
     const webhook = ref(stored?.webhook || '');
+    const corsProxy = ref(stored?.corsProxy || '');
+    const webhookMethod = ref(stored?.webhookMethod || 'POST');
     const showCfg = ref(false);
+    const connTest = reactive({ loading: false, result: null });
     const importJson = ref('');
     const importErr = ref('');
     const importPreview = ref(null);
@@ -1109,18 +1213,26 @@ const app = createApp({
     const callWH = async (action, payload = {}) => {
       const full = `${wf.value.prefix}_${action}`;
       const reqBody = { action: full, workflow: wf.value.id, step: step.value, ...payload };
-      if (!webhook.value) {
+      const w = wf.value;
+      const whUrl = w.webhook || webhook.value;
+      const whMethod = w.webhookMethod || webhookMethod.value || 'POST';
+      const whProxy = w.corsProxy || corsProxy.value;
+      if (!whUrl) {
         log(`${full} (Demo)`); await delay();
         const demoRes = { demo: true };
         _pushDebug(full, reqBody, demoRes);
         return demoRes;
       }
       try {
-        const r = await fetch(webhook.value, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(reqBody)
-        });
+        const targetUrl = whProxy
+          ? whProxy.replace(/\/+$/, '') + '/' + whUrl
+          : whUrl;
+        const method = whMethod;
+        const fetchOpts = method === 'GET'
+          ? { method: 'GET', headers: { 'Content-Type': 'application/json' } }
+          : { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(reqBody) };
+        const sep = method === 'GET' ? (targetUrl.includes('?') ? '&' : '?') + 'data=' + encodeURIComponent(JSON.stringify(reqBody)) : '';
+        const r = await fetch(targetUrl + sep, fetchOpts);
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const d = await r.json().catch(() => ({}));
         log(`${full} → ✓`);
@@ -1133,6 +1245,97 @@ const app = createApp({
       }
     };
 
+    const testConnection = async () => {
+      connTest.loading = true;
+      connTest.result = null;
+      const w = wf.value;
+      const whUrl = w.webhook || webhook.value;
+      const whMethod = w.webhookMethod || webhookMethod.value || 'POST';
+      const whProxy = w.corsProxy || corsProxy.value;
+      const details = [];
+
+      // Step 1: Check URL
+      details.push(`URL: ${whUrl || '(leer)'}`);
+      details.push(`Methode: ${whMethod}`);
+      if (whProxy) details.push(`CORS Proxy: ${whProxy}`);
+      details.push(`Quelle: ${w.webhook ? 'Workflow' : webhook.value ? 'Global (Fallback)' : 'Keine'}`);
+
+      if (!whUrl) {
+        connTest.result = { ok: false, details: [...details, '', 'Keine Webhook-URL konfiguriert.', 'Trage eine URL ein oder setze eine globale Fallback-URL.'] };
+        connTest.loading = false;
+        return;
+      }
+
+      // Step 2: Validate URL format
+      try { new URL(whUrl); } catch {
+        connTest.result = { ok: false, details: [...details, '', `Ungültige URL: "${whUrl}"`, 'Muss mit http:// oder https:// beginnen.'] };
+        connTest.loading = false;
+        return;
+      }
+
+      // Step 3: Try to reach the endpoint
+      const targetUrl = whProxy ? whProxy.replace(/\/+$/, '') + '/' + whUrl : whUrl;
+      if (whProxy) details.push(`Ziel-URL: ${targetUrl}`);
+
+      const testBody = { action: `${w.prefix}_ping`, workflow: w.id, step: 0, test: true };
+      try {
+        const fetchOpts = whMethod === 'GET'
+          ? { method: 'GET' }
+          : { method: whMethod, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(testBody) };
+        const sep = whMethod === 'GET' ? (targetUrl.includes('?') ? '&' : '?') + 'data=' + encodeURIComponent(JSON.stringify(testBody)) : '';
+        const r = await fetch(targetUrl + sep, fetchOpts);
+        details.push('');
+        details.push(`HTTP Status: ${r.status} ${r.statusText}`);
+
+        if (r.ok) {
+          const text = await r.text();
+          let parsed;
+          try { parsed = JSON.parse(text); } catch {}
+          if (parsed) details.push(`Response: ${JSON.stringify(parsed).slice(0, 200)}`);
+          connTest.result = { ok: true, details: [...details, '', 'n8n antwortet — Verbindung steht.'] };
+        } else if (r.status === 404) {
+          details.push('');
+          details.push('Mögliche Ursachen:');
+          details.push('  1. Workflow ist nicht aktiviert (Toggle in n8n)');
+          details.push('  2. /webhook-test/ statt /webhook/ in der URL');
+          details.push('     (webhook-test nur aktiv bei "Test workflow")');
+          details.push('  3. Webhook-Pfad/UUID stimmt nicht überein');
+          details.push(`  4. Methode ${whMethod} ≠ Methode im n8n Webhook-Node`);
+          connTest.result = { ok: false, details };
+        } else if (r.status === 405) {
+          details.push('');
+          details.push(`n8n akzeptiert kein ${whMethod} auf dieser URL.`);
+          details.push('Prüfe die HTTP-Methode im n8n Webhook-Node.');
+          connTest.result = { ok: false, details };
+        } else {
+          const text = await r.text().catch(() => '');
+          if (text) details.push(`Body: ${text.slice(0, 200)}`);
+          connTest.result = { ok: false, details };
+        }
+      } catch (e) {
+        details.push('');
+        if (e.message === 'Failed to fetch' || e.message.includes('NetworkError')) {
+          details.push('Netzwerkfehler — Verbindung fehlgeschlagen.');
+          details.push('');
+          details.push('Mögliche Ursachen:');
+          if (!whProxy) {
+            details.push('  1. CORS blockiert (file:// Origin → CORS Proxy nötig)');
+            details.push('     → Starte: node cors-proxy.js');
+            details.push('     → Trage http://localhost:8090 als CORS Proxy ein');
+          } else {
+            details.push('  1. CORS Proxy läuft nicht');
+            details.push(`     → Prüfe ob ${whProxy} erreichbar ist`);
+          }
+          details.push('  2. n8n läuft nicht oder ist nicht erreichbar');
+          details.push(`     → Prüfe ob ${whUrl} im Browser erreichbar ist`);
+        } else {
+          details.push(`Fehler: ${e.message}`);
+        }
+        connTest.result = { ok: false, details };
+      }
+      connTest.loading = false;
+    };
+
     // Session management
     const newSession = (wfIdx) => {
       const sess = createSession(wfIdx);
@@ -1140,9 +1343,24 @@ const app = createApp({
       activeTab.value = sessions.value.length - 1;
     };
 
+    const deleteWorkflow = (wfIdx) => {
+      const w = workflows.value[wfIdx];
+      if (w?.demo) return;
+      if (!confirm(`Workflow "${w.name}" löschen?`)) return;
+      // Close all sessions referencing this workflow, adjust indices
+      sessions.value = sessions.value.filter(s => s.wfIdx !== wfIdx).map(s => {
+        if (s.wfIdx > wfIdx) s.wfIdx--;
+        return s;
+      });
+      workflows.value.splice(wfIdx, 1);
+      if (activeTab.value >= sessions.value.length) activeTab.value = Math.max(0, sessions.value.length - 1);
+      saveState(workflows, sessions, activeTab, webhook, corsProxy, webhookMethod);
+    };
+
     const closeSession = (idx) => {
       sessions.value.splice(idx, 1);
       if (activeTab.value >= sessions.value.length) activeTab.value = Math.max(0, sessions.value.length - 1);
+      saveState(workflows, sessions, activeTab, webhook, corsProxy, webhookMethod);
     };
 
     const toggleImport = () => {
@@ -1237,6 +1455,7 @@ const app = createApp({
       newSession(idx);
       importJson.value = ''; importPreview.value = null;
       log(`Workflow "${name}" importiert ✓`);
+      saveState(workflows, sessions, activeTab, webhook, corsProxy, webhookMethod);
     };
 
     const handleFile = (e) => {
@@ -1247,20 +1466,23 @@ const app = createApp({
       reader.readAsText(file);
     };
 
-    // Auto-save to localStorage (debounced)
+    // Auto-save to localStorage (debounced + beforeunload)
+    const immediateSave = () => saveState(workflows, sessions, activeTab, webhook, corsProxy, webhookMethod);
     let _saveTimer = null;
     const debouncedSave = () => {
       if (_saveTimer) clearTimeout(_saveTimer);
-      _saveTimer = setTimeout(() => saveState(workflows, sessions, activeTab, webhook), 300);
+      _saveTimer = setTimeout(immediateSave, 300);
     };
-    watch([sessions, activeTab, webhook, workflows], debouncedSave, { deep: true });
+    watch([sessions, activeTab, webhook, corsProxy, webhookMethod, workflows], debouncedSave, { deep: true });
+    window.addEventListener('beforeunload', immediateSave);
 
     return {
       workflows, sessions, activeTab, activeSession, activeWfIdx,
       step, loading, done, form, ctx, checks, text, instr, logs,
-      webhook, showCfg, importJson, importErr, importPreview, currentTheme, themes, applyTheme,
+      webhook, corsProxy, webhookMethod, showCfg, connTest, testConnection,
+      importJson, importErr, importPreview, currentTheme, themes, applyTheme,
       wf, sd,
-      cnt, tagStyle, newSession, closeSession, toggleImport, reset,
+      cnt, tagStyle, newSession, closeSession, deleteWorkflow, toggleImport, reset,
       execInput, execCheck, goEdit, improve, approve,
       loadDemo, goBackToEdit, handleImport, confirmImport, handleFile
     };
