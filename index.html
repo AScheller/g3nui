@@ -485,6 +485,24 @@ body { margin:0 }
                               class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2.5 text-[13px] text-g-tx outline-none resize-y leading-7 transition-colors"
                               style="min-height:200px"></textarea>
 
+                    <!-- Suggestion preview -->
+                    <div v-if="activeSession.dorSuggestion" class="mt-3 border border-g-ac/30 rounded-lg overflow-hidden bg-g-ac/[0.04]">
+                      <div class="px-3 py-2 border-b border-g-ac/20 flex items-center justify-between">
+                        <span class="text-[10px] font-bold uppercase tracking-wide text-g-ac flex items-center gap-1.5">
+                          <span v-icon="'sparkles'" data-size="11" style="display:inline-flex"></span> Vorschlag
+                        </span>
+                        <div class="flex gap-2">
+                          <button @click="dorAcceptSuggestion" class="btn-ok text-[11px]" style="padding:4px 12px">
+                            <span v-icon="'check'" data-size="12" style="display:inline-flex"></span> Übernehmen
+                          </button>
+                          <button @click="dorRejectSuggestion" class="btn-sec text-[11px]" style="padding:4px 12px">
+                            <span v-icon="'x'" data-size="12" style="display:inline-flex"></span> Verwerfen
+                          </button>
+                        </div>
+                      </div>
+                      <div class="px-3 py-2.5 text-[13px] text-g-tx leading-7 whitespace-pre-wrap max-h-[300px] overflow-y-auto">{{ activeSession.dorSuggestion }}</div>
+                    </div>
+
                     <div class="mt-3">
                       <label class="block text-[10px] font-bold uppercase tracking-wide text-g-tx3 mb-1">
                         Anweisungen
@@ -835,6 +853,23 @@ body { margin:0 }
                         <textarea v-model="text" rows="5"
                                   class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2 text-[12px] text-g-tx outline-none resize-y leading-6"
                                   style="min-height:100px"></textarea>
+                        <!-- Suggestion preview (sequence view) -->
+                        <div v-if="activeSession.dorSuggestion" class="mt-2 border border-g-ac/30 rounded-lg overflow-hidden bg-g-ac/[0.04]">
+                          <div class="px-2.5 py-1.5 border-b border-g-ac/20 flex items-center justify-between">
+                            <span class="text-[9px] font-bold uppercase tracking-wide text-g-ac flex items-center gap-1">
+                              <span v-icon="'sparkles'" data-size="9" style="display:inline-flex"></span> Vorschlag
+                            </span>
+                            <div class="flex gap-1.5">
+                              <button @click="dorAcceptSuggestion" class="btn-ok text-[10px]" style="padding:3px 8px">
+                                <span v-icon="'check'" data-size="10" style="display:inline-flex"></span> Übernehmen
+                              </button>
+                              <button @click="dorRejectSuggestion" class="btn-sec text-[10px]" style="padding:3px 8px">
+                                <span v-icon="'x'" data-size="10" style="display:inline-flex"></span> Verwerfen
+                              </button>
+                            </div>
+                          </div>
+                          <div class="px-2.5 py-2 text-[12px] text-g-tx leading-6 whitespace-pre-wrap max-h-[200px] overflow-y-auto">{{ activeSession.dorSuggestion }}</div>
+                        </div>
                         <textarea v-model="instr" rows="1" placeholder="Anweisungen…"
                                   class="w-full bg-g-bg border border-g-bd rounded-[7px] px-3 py-2 text-xs text-g-tx outline-none resize-y mt-2"
                                   :class="activeSession.dorFixing !== null ? 'border-g-ac/40' : ''"></textarea>
@@ -1490,7 +1525,7 @@ function createSession(wfIdx, data) {
     text: data?.text || '', instr: data?.instr || '', logs: data?.logs || [],
     tableData: data?.tableData || null,
     debug: data?.debug || [], showDebug: false, seqView: data?.seqView ?? false,
-    dorFixing: null, dorLoading: null
+    dorFixing: null, dorLoading: null, dorSuggestion: null
   });
   if (s.id > _sessId) _sessId = s.id;
   return s;
@@ -1732,7 +1767,8 @@ const app = createApp({
         const sep = method === 'GET' ? (targetUrl.includes('?') ? '&' : '?') + 'data=' + encodeURIComponent(JSON.stringify(reqBody)) : '';
         const r = await fetch(targetUrl + sep, fetchOpts);
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const d = await r.json().catch(() => ({}));
+        let d = await r.json().catch(() => ({}));
+        if (Array.isArray(d)) d = d[0] || {};
         log(`${full} → ✓`);
         _pushDebug(full, reqBody, d);
         return d;
@@ -2059,16 +2095,37 @@ const app = createApp({
       s.dorLoading = 'improve';
       // Improve text
       const d = await callWH(dorStep.improveAction || 'improve', { text: s.text, instructions: s.instr, context: s.ctx });
-      if (d.demo) s.text += '\n\n— Verbesserung angewendet —';
-      else if (d.text) s.text = d.text;
+      if (d.demo) s.dorSuggestion = s.text + '\n\n— Verbesserung angewendet —';
+      else if (d.text) s.dorSuggestion = d.text;
       s.instr = '';
       s.dorFixing = null;
-      // Auto re-check
-      const d2 = await callWH(dorStep.action, { form: s.form, context: s.ctx, text: s.text });
+      // Auto re-check with suggested text
+      const checkText = s.dorSuggestion || s.text;
+      const d2 = await callWH(dorStep.action, { form: s.form, context: s.ctx, text: checkText });
       if (d2.demo && wf.value.demo) s.checks = wf.value.demo.checks || [];
       else if (d2.check_results) s.checks = d2.check_results;
       s.dorLoading = null;
-      log('Verbessert & geprüft');
+      log('Vorschlag erstellt & geprüft');
+    };
+
+    const dorAcceptSuggestion = () => {
+      const s = activeSession.value; if (!s || !s.dorSuggestion) return;
+      s.text = s.dorSuggestion;
+      s.dorSuggestion = null;
+      log('Vorschlag übernommen');
+    };
+
+    const dorRejectSuggestion = async () => {
+      const s = activeSession.value; if (!s || !s.dorSuggestion) return;
+      s.dorSuggestion = null;
+      // Re-check with original text
+      const dorStep = sd.value;
+      s.dorLoading = 'check';
+      const d = await callWH(dorStep.action, { form: s.form, context: s.ctx, text: s.text });
+      if (d.demo && wf.value.demo) s.checks = wf.value.demo.checks || [];
+      else if (d.check_results) s.checks = d.check_results;
+      s.dorLoading = null;
+      log('Vorschlag verworfen');
     };
 
     const dorFixAll = async () => {
@@ -2141,7 +2198,7 @@ const app = createApp({
       wf, sd,
       cnt, tagStyle, addField, newSession, closeSession, deleteWorkflow, toggleImport, reset,
       execInput, execCheck, goEdit, improve, approve,
-      recheckDor, dorLoad, dorInit, dorCheck, dorFix, dorImprove, dorFixAll, dorApprove,
+      recheckDor, dorLoad, dorInit, dorCheck, dorFix, dorImprove, dorFixAll, dorApprove, dorAcceptSuggestion, dorRejectSuggestion,
       loadDemo, goBackToEdit, handleImport, confirmImport, handleFile
     };
   }

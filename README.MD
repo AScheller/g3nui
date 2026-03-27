@@ -8,15 +8,24 @@ g3nui is a lightweight, browser-based UI engine that transforms **n8n workflow J
 - **Intelligent Node Classification** — Automatically maps n8n node types to UI step types:
   | n8n Node Type | g3nui Step |
   |---|---|
-  | Webhook / Trigger / Form Trigger | Input (with auto-generated form fields) |
+  | Webhook / Form Trigger | Input (with auto-generated form fields) |
+  | Manual Trigger / Schedule Trigger | Start (simple trigger without form) |
   | IF / Switch / Filter | Check (validation with pass/warn/fail indicators) |
   | OpenAI / Ollama / Anthropic / LangChain | Edit (AI-assisted content generation & refinement) |
   | HTTP Request / Jira / Slack / Email | Review & Approve (final human sign-off) |
+  | Jira + AI (DoR workflow) | DoR (Definition of Ready — ticket validation & improvement) |
   | Set / Code / Merge | Skipped (utility nodes) |
 - **Step-by-Step Wizard** — Guides users through each workflow step with a visual stepper, contextual forms, and action buttons.
-- **Webhook Integration** — Sends form data and approval payloads back to n8n via configurable webhook URLs.
+- **DoR (Definition of Ready)** — Specialized step type for iterative ticket validation against configurable criteria. Load tickets (e.g. from Jira), run DoR checks with pass/warn/fail indicators, improve text with AI, and approve changes — all in one step. Supports inline re-checks and dynamic action editing.
+- **Session Management** — Work on multiple workflows simultaneously using tabs. Create, switch, and close sessions independently.
+- **Sequence View** — Toggle between single-step card view and a vertical overview showing all workflow steps at once.
+- **Editable Fields** — Input steps allow dynamic adding, editing, and removing of form fields at runtime.
+- **Table Display** — Webhook responses containing array data are automatically rendered as scrollable tables with tooltips.
+- **Webhook Integration** — Sends form data and approval payloads back to n8n via configurable webhook URLs. Supports POST/GET/PUT method selection, workflow-specific URLs, connection testing with diagnostics, and optional CORS proxy.
+- **Workflow Management** — Delete imported workflows (demo workflows are protected).
 - **AI-Assisted Editing** — Edit steps support iterative AI improvement with optional user instructions.
-- **Dark Theme** — Clean, modern dark UI built with Tailwind CSS.
+- **Debug Mode** — Toggle debug logs to inspect all API calls, responses, and errors for troubleshooting.
+- **Dark Theme** — Clean, modern dark UI built with Tailwind CSS and CSS custom properties for easy theming.
 - **Zero Dependencies** — Single HTML file using Vue 3 (CDN) and Tailwind CSS (CDN). No build step required.
 
 ## Quick Start
@@ -34,12 +43,17 @@ To connect g3nui back to your n8n instance:
 
 1. Click the **Webhook** button at the bottom of the sidebar.
 2. Enter your n8n webhook URL (e.g., `https://n8n.example.com/webhook/...`).
-3. g3nui will POST step data to this URL as users progress through the workflow.
+3. Select the HTTP method (POST, GET, or PUT) — default is POST.
+4. Optionally set a workflow-specific webhook URL that overrides the global default.
+5. Use **Test Connection** to verify connectivity and get diagnostic feedback.
+6. If running locally via `file://`, configure the CORS proxy URL (default: `localhost:8080`).
+7. g3nui will send step data to this URL as users progress through the workflow.
 
 ## Architecture
 
 ```
 index.html          — Full application (Vue 3 SPA, single file)
+cors-proxy.js       — Optional CORS proxy for local file:// usage
 ```
 
 The application is a single-page app powered by:
@@ -56,7 +70,7 @@ The application is a single-page app powered by:
 
 ## Supported n8n Node Types
 
-- **Triggers**: Webhook, Form Trigger, Manual Trigger
+- **Triggers**: Webhook, Form Trigger, Manual Trigger, Schedule Trigger, Execute Workflow Trigger
 - **Input/Forms**: n8n Form nodes (auto-extracts field definitions)
 - **Conditions**: IF, Switch, Compare, Filter
 - **AI/LLM**: OpenAI, Ollama, Anthropic, LangChain, Chat Models
