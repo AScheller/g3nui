@@ -967,13 +967,21 @@ body { margin:0 }
 
           <!-- Log -->
           <div v-if="logs.length > 0" class="mt-5">
-            <div class="sec-label">Log</div>
-            <div v-for="(l, li) in logs" :key="li"
-                 class="font-mono text-[10.5px] text-g-tx3 py-[3px] flex gap-2.5"
-                 :class="li < logs.length - 1 ? 'border-b border-g-bd/15' : ''">
-              <span>{{ l.t }}</span>
-              <span :class="l.ok ? 'text-g-gn' : 'text-g-rd'">{{ l.m }}</span>
-            </div>
+            <button @click="activeSession.showLog = !activeSession.showLog"
+                    class="sec-label flex items-center gap-2 w-full text-left bg-transparent border-none cursor-pointer p-0"
+                    style="font-family:inherit">
+              Log
+              <span class="text-g-tx3 font-normal normal-case tracking-normal">({{ logs.length }})</span>
+              <span v-icon="activeSession.showLog ? 'chevron-up' : 'chevron-down'" data-size="11" style="display:inline-flex" class="text-g-tx3 ml-auto"></span>
+            </button>
+            <template v-if="activeSession.showLog">
+              <div v-for="(l, li) in logs" :key="li"
+                   class="font-mono text-[10.5px] text-g-tx3 py-[3px] flex gap-2.5"
+                   :class="li < logs.length - 1 ? 'border-b border-g-bd/15' : ''">
+                <span>{{ l.t }}</span>
+                <span :class="l.ok ? 'text-g-gn' : 'text-g-rd'">{{ l.m }}</span>
+              </div>
+            </template>
           </div>
 
           <!-- Debug Panel -->
@@ -1524,7 +1532,7 @@ function createSession(wfIdx, data) {
     form: data?.form || {}, ctx: data?.ctx || {}, checks: data?.checks || [],
     text: data?.text || '', instr: data?.instr || '', logs: data?.logs || [],
     tableData: data?.tableData || null,
-    debug: data?.debug || [], showDebug: false, seqView: data?.seqView ?? false,
+    debug: data?.debug || [], showDebug: false, showLog: false, seqView: data?.seqView ?? false,
     dorFixing: null, dorLoading: null, dorSuggestion: null
   });
   if (s.id > _sessId) _sessId = s.id;
@@ -1712,15 +1720,17 @@ const app = createApp({
       // Build tags
       const tags = [{ text: issue.key, s: '' }];
       if (f.issuetype?.name) tags.push({ text: f.issuetype.name, s: 'type' });
+      if (f.status?.name) tags.push({ text: f.status.name, s: 'pri' });
       if (f.priority?.name) tags.push({ text: f.priority.name, s: 'pri' });
-      else if (f.status?.name) tags.push({ text: f.status.name, s: 'pri' });
+      if (f.customfield_10016 != null) tags.push({ text: `${f.customfield_10016} SP`, s: 'sp' });
       if (f.customfield_10020?.[0]?.name) tags.push({ text: f.customfield_10020[0].name, s: 'type' });
       // Build preview lines
       const lines = [];
       if (f.description) lines.push(f.description.replace(/\*/g, ''));
       if (f.assignee?.displayName) lines.push(`Bearbeiter: ${f.assignee.displayName}`);
-      else if (f.creator?.displayName) lines.push(`Ersteller: ${f.creator.displayName}`);
+      if (f.creator?.displayName && f.creator.displayName !== f.assignee?.displayName) lines.push(`Ersteller: ${f.creator.displayName}`);
       if (f.duedate) lines.push(`Fällig: ${f.duedate}`);
+      if (f.customfield_10016 != null) lines.push(`Story Points: ${f.customfield_10016}`);
       if (f.subtasks?.length) lines.push(`Subtasks: ${f.subtasks.map(s => s.fields?.summary || s.key).join(', ')}`);
       if (f.labels?.length) lines.push(`Labels: ${f.labels.join(', ')}`);
       return {
@@ -1733,7 +1743,7 @@ const app = createApp({
     const delay = () => new Promise(r => setTimeout(r, 400 + Math.random() * 500));
 
     const tagStyle = (s) => {
-      const c = { '': T.ac, type: T.cy, pri: T.am }[s] || T.ac;
+      const c = { '': T.ac, type: T.cy, pri: T.am, sp: T.gn }[s] || T.ac;
       return { background: c + '18', color: c };
     };
 
